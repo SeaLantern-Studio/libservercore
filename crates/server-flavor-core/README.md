@@ -43,6 +43,18 @@ let vanilla = resolve_server_flavor_profile(&FlavorResolutionInput {
 assert_eq!(vanilla.flavor_kind, ServerFlavorKind::VanillaLike);
 assert_eq!(vanilla.default_extension_kind, Some(ServerExtensionKind::Datapack));
 
+let bedrock = resolve_server_flavor_profile(&FlavorResolutionInput {
+    core_key: Some("bds"),
+    runtime_kind: Some("local"),
+    startup_mode: Some("exe"),
+    wrapper_kind: None,
+    has_pumpkin_config: false,
+});
+
+assert_eq!(bedrock.flavor_kind, ServerFlavorKind::BedrockLike);
+assert_eq!(bedrock.default_startup_mode, Some(StartupMode::Exe));
+assert_eq!(bedrock.default_extension_kind, Some(ServerExtensionKind::Addon));
+
 let wrapped = resolve_server_flavor_profile(&FlavorResolutionInput {
     core_key: Some("paper"),
     runtime_kind: Some("local"),
@@ -57,3 +69,5 @@ assert_eq!(wrapped.flavor_kind, ServerFlavorKind::WrappedServer);
 ## Design Notes
 
 This crate intentionally models flavor as a derived capability profile instead of making raw `core_type` strings carry every downstream behavior decision.
+
+The current model covers both Java Edition and Bedrock Edition server families, including proxy forks, native binaries, and Bedrock wrapper ecosystems such as LiteLoaderBDS, LeviLamina, and BDSX.

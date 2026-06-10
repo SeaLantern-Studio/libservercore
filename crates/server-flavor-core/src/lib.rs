@@ -15,6 +15,7 @@ pub enum ServerFlavorKind {
     ForgeLike,
     FabricLike,
     ProxyLike,
+    BedrockLike,
     NativeExecutable,
     WrappedServer,
     Unknown,
@@ -26,6 +27,7 @@ pub enum ServerExtensionKind {
     Plugin,
     Mod,
     Datapack,
+    Addon,
     McdrPlugin,
 }
 
@@ -33,6 +35,7 @@ pub enum ServerExtensionKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum StartupMode {
     Jar,
+    Exe,
     Bat,
     Sh,
     Ps1,
@@ -44,6 +47,7 @@ impl StartupMode {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Jar => "jar",
+            Self::Exe => "exe",
             Self::Bat => "bat",
             Self::Sh => "sh",
             Self::Ps1 => "ps1",
@@ -55,6 +59,7 @@ impl StartupMode {
     pub fn parse(value: &str) -> Option<Self> {
         match value.trim().to_ascii_lowercase().as_str() {
             "jar" => Some(Self::Jar),
+            "exe" => Some(Self::Exe),
             "bat" | "cmd" => Some(Self::Bat),
             "sh" => Some(Self::Sh),
             "ps1" => Some(Self::Ps1),
@@ -195,6 +200,15 @@ pub fn resolve_server_flavor_profile(input: &FlavorResolutionInput<'_>) -> Serve
         Some("fabric") | Some("quilt") => fabric_like_profile(normalized_core),
         Some("velocity") | Some("bungeecord") | Some("waterfall") | Some("lightfall")
         | Some("travertine") | Some("flamecord") => proxy_like_profile(normalized_core),
+        Some("bds") => bedrock_dedicated_profile(normalized_core),
+        Some("liteloaderbds") | Some("levilamina") | Some("bdsx") => {
+            bedrock_wrapped_profile(normalized_core)
+        }
+        Some("allay") | Some("nukkit") | Some("powernukkitx") => {
+            bedrock_java_plugin_profile(normalized_core)
+        }
+        Some("pocketmine") => bedrock_script_plugin_profile(normalized_core),
+        Some("endstone") => bedrock_native_plugin_profile(normalized_core),
         Some("arclight")
         | Some("arclight_forge")
         | Some("arclight_neoforge")
@@ -331,6 +345,113 @@ fn proxy_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     }
 }
 
+fn bedrock_dedicated_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
+    ServerFlavorProfile {
+        flavor_kind: ServerFlavorKind::BedrockLike,
+        display_key: "bedrock_dedicated",
+        detected_core_key: core_key,
+        default_startup_mode: Some(StartupMode::Exe),
+        preferred_candidate_modes: vec![
+            StartupMode::Exe,
+            StartupMode::Bat,
+            StartupMode::Ps1,
+            StartupMode::Sh,
+        ],
+        requires_java: false,
+        supports_starter_install: false,
+        supports_custom_wrapper: true,
+        extension_kinds: vec![ServerExtensionKind::Addon],
+        default_extension_kind: Some(ServerExtensionKind::Addon),
+        allow_manual_extension_switch: false,
+        preferred_control_channel: ControlChannel::Stdin,
+        special_config_kinds: vec![SpecialConfigKind::ServerProperties],
+    }
+}
+
+fn bedrock_wrapped_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
+    ServerFlavorProfile {
+        flavor_kind: ServerFlavorKind::BedrockLike,
+        display_key: "bedrock_wrapped",
+        detected_core_key: core_key,
+        default_startup_mode: Some(StartupMode::Exe),
+        preferred_candidate_modes: vec![
+            StartupMode::Exe,
+            StartupMode::Bat,
+            StartupMode::Ps1,
+            StartupMode::Sh,
+            StartupMode::Custom,
+        ],
+        requires_java: false,
+        supports_starter_install: false,
+        supports_custom_wrapper: true,
+        extension_kinds: vec![ServerExtensionKind::Plugin, ServerExtensionKind::Addon],
+        default_extension_kind: Some(ServerExtensionKind::Plugin),
+        allow_manual_extension_switch: true,
+        preferred_control_channel: ControlChannel::Stdin,
+        special_config_kinds: vec![SpecialConfigKind::ServerProperties],
+    }
+}
+
+fn bedrock_java_plugin_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
+    ServerFlavorProfile {
+        flavor_kind: ServerFlavorKind::BedrockLike,
+        display_key: "bedrock_plugin_java",
+        detected_core_key: core_key,
+        default_startup_mode: Some(StartupMode::Jar),
+        preferred_candidate_modes: vec![StartupMode::Jar, StartupMode::Sh, StartupMode::Bat],
+        requires_java: true,
+        supports_starter_install: false,
+        supports_custom_wrapper: true,
+        extension_kinds: vec![ServerExtensionKind::Plugin],
+        default_extension_kind: Some(ServerExtensionKind::Plugin),
+        allow_manual_extension_switch: false,
+        preferred_control_channel: ControlChannel::Stdin,
+        special_config_kinds: Vec::new(),
+    }
+}
+
+fn bedrock_script_plugin_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
+    ServerFlavorProfile {
+        flavor_kind: ServerFlavorKind::BedrockLike,
+        display_key: "bedrock_plugin_script",
+        detected_core_key: core_key,
+        default_startup_mode: Some(StartupMode::Custom),
+        preferred_candidate_modes: vec![StartupMode::Custom, StartupMode::Bat, StartupMode::Sh],
+        requires_java: false,
+        supports_starter_install: false,
+        supports_custom_wrapper: true,
+        extension_kinds: vec![ServerExtensionKind::Plugin],
+        default_extension_kind: Some(ServerExtensionKind::Plugin),
+        allow_manual_extension_switch: false,
+        preferred_control_channel: ControlChannel::Stdin,
+        special_config_kinds: Vec::new(),
+    }
+}
+
+fn bedrock_native_plugin_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
+    ServerFlavorProfile {
+        flavor_kind: ServerFlavorKind::BedrockLike,
+        display_key: "bedrock_plugin_native",
+        detected_core_key: core_key,
+        default_startup_mode: Some(StartupMode::Exe),
+        preferred_candidate_modes: vec![
+            StartupMode::Exe,
+            StartupMode::Bat,
+            StartupMode::Ps1,
+            StartupMode::Sh,
+            StartupMode::Custom,
+        ],
+        requires_java: false,
+        supports_starter_install: false,
+        supports_custom_wrapper: true,
+        extension_kinds: vec![ServerExtensionKind::Plugin],
+        default_extension_kind: Some(ServerExtensionKind::Plugin),
+        allow_manual_extension_switch: false,
+        preferred_control_channel: ControlChannel::Stdin,
+        special_config_kinds: Vec::new(),
+    }
+}
+
 fn mixed_extension_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::ForgeLike,
@@ -458,9 +579,13 @@ mod tests {
             normalize_core_key("Arclight-Neoforge"),
             Some("arclight_neoforge")
         );
-        assert_eq!(normalize_core_key("Waterfall"), Some("lightfall"));
+        assert_eq!(normalize_core_key("Waterfall"), Some("waterfall"));
+        assert_eq!(normalize_core_key("BungeeCord"), Some("bungeecord"));
         assert_eq!(normalize_core_key("Folia"), Some("folia"));
         assert_eq!(normalize_core_key("Paper-Airplane"), Some("airplane"));
+        assert_eq!(normalize_core_key("bedrock-dedicated-server"), Some("bds"));
+        assert_eq!(normalize_core_key("LiteLoader-BDS"), Some("liteloaderbds"));
+        assert_eq!(normalize_core_key("AllayMC"), Some("allay"));
         assert_eq!(normalize_core_key("unknown-core"), None);
     }
 
@@ -580,7 +705,7 @@ mod tests {
 
     #[test]
     fn resolves_additional_proxy_forks() {
-        for core_key in ["travertine", "flamecord"] {
+        for core_key in ["bungeecord", "waterfall", "travertine", "flamecord"] {
             let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
                 core_key: Some(core_key),
                 ..FlavorResolutionInput::default()
@@ -597,6 +722,101 @@ mod tests {
                 "{core_key}"
             );
         }
+    }
+
+    #[test]
+    fn resolves_bedrock_dedicated_profile() {
+        let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+            core_key: Some("bds"),
+            ..FlavorResolutionInput::default()
+        });
+
+        assert_eq!(profile.flavor_kind, ServerFlavorKind::BedrockLike);
+        assert_eq!(profile.display_key, "bedrock_dedicated");
+        assert_eq!(profile.default_startup_mode, Some(StartupMode::Exe));
+        assert_eq!(
+            profile.default_extension_kind,
+            Some(ServerExtensionKind::Addon)
+        );
+        assert!(!profile.requires_java);
+    }
+
+    #[test]
+    fn resolves_bedrock_wrappers() {
+        for core_key in ["liteloaderbds", "levilamina", "bdsx"] {
+            let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+                core_key: Some(core_key),
+                ..FlavorResolutionInput::default()
+            });
+
+            assert_eq!(
+                profile.flavor_kind,
+                ServerFlavorKind::BedrockLike,
+                "{core_key}"
+            );
+            assert_eq!(profile.display_key, "bedrock_wrapped", "{core_key}");
+            assert_eq!(
+                profile.default_extension_kind,
+                Some(ServerExtensionKind::Plugin),
+                "{core_key}"
+            );
+            assert!(profile.allow_manual_extension_switch, "{core_key}");
+            assert!(
+                profile
+                    .extension_kinds
+                    .contains(&ServerExtensionKind::Addon),
+                "{core_key}"
+            );
+        }
+    }
+
+    #[test]
+    fn resolves_bedrock_java_plugin_servers() {
+        for core_key in ["allay", "nukkit", "powernukkitx"] {
+            let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+                core_key: Some(core_key),
+                ..FlavorResolutionInput::default()
+            });
+
+            assert_eq!(
+                profile.flavor_kind,
+                ServerFlavorKind::BedrockLike,
+                "{core_key}"
+            );
+            assert_eq!(profile.display_key, "bedrock_plugin_java", "{core_key}");
+            assert_eq!(
+                profile.default_startup_mode,
+                Some(StartupMode::Jar),
+                "{core_key}"
+            );
+            assert_eq!(
+                profile.default_extension_kind,
+                Some(ServerExtensionKind::Plugin),
+                "{core_key}"
+            );
+            assert!(profile.requires_java, "{core_key}");
+        }
+    }
+
+    #[test]
+    fn resolves_other_bedrock_plugin_servers() {
+        let pocketmine = resolve_server_flavor_profile(&FlavorResolutionInput {
+            core_key: Some("pocketmine"),
+            ..FlavorResolutionInput::default()
+        });
+        assert_eq!(pocketmine.flavor_kind, ServerFlavorKind::BedrockLike);
+        assert_eq!(pocketmine.display_key, "bedrock_plugin_script");
+        assert_eq!(pocketmine.default_startup_mode, Some(StartupMode::Custom));
+        assert!(!pocketmine.requires_java);
+
+        let endstone = resolve_server_flavor_profile(&FlavorResolutionInput {
+            core_key: Some("endstone"),
+            ..FlavorResolutionInput::default()
+        });
+        assert_eq!(endstone.flavor_kind, ServerFlavorKind::BedrockLike);
+        assert_eq!(endstone.display_key, "bedrock_plugin_native");
+        assert_eq!(endstone.default_startup_mode, Some(StartupMode::Exe));
+        assert!(!endstone.requires_java);
     }
 
     #[test]

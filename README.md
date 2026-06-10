@@ -9,7 +9,7 @@ This repository is intended to host publishable crates that can be consumed by a
 - `sl-server-core-taxonomy`: normalize Minecraft server core keys and provide coarse taxonomy helpers.
 - `sl-server-flavor-core`: resolve high-level server flavor and capability profiles from core type, runtime kind, startup mode, and wrapper hints.
 
-The current taxonomy intentionally covers vanilla, Bukkit-family forks such as Paper/Folia/Pufferfish, Forge/Fabric ecosystems, proxy forks such as Velocity/Travertine/FlameCord, mixed plugin+mod hybrids, and native executables such as Pumpkin/Cuberite.
+The current taxonomy intentionally covers vanilla, Bukkit-family forks such as Paper/Folia/Pufferfish, proxy forks such as BungeeCord/Waterfall/Velocity/Travertine/FlameCord, Forge/Fabric ecosystems, mixed plugin+mod hybrids, native executables such as Pumpkin/Cuberite, and Bedrock server lines such as Bedrock Dedicated Server, LiteLoaderBDS, LeviLamina, BDSX, Allay, and Nukkit.
 
 ## Status
 

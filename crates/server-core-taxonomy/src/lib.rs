@@ -13,6 +13,7 @@ pub enum CoreFamily {
     ForgeLike,
     FabricLike,
     ProxyLike,
+    BedrockLike,
     NativeExecutable,
     MixedExtension,
     Unknown,
@@ -27,9 +28,17 @@ impl CoreFamily {
             | Some("glowstone") | Some("bukkit") => Self::BukkitLike,
             Some("forge") | Some("neoforge") => Self::ForgeLike,
             Some("fabric") | Some("quilt") => Self::FabricLike,
-            Some("velocity") | Some("lightfall") | Some("travertine") | Some("flamecord") => {
-                Self::ProxyLike
-            }
+            Some("velocity") | Some("bungeecord") | Some("waterfall") | Some("lightfall")
+            | Some("travertine") | Some("flamecord") => Self::ProxyLike,
+            Some("bds")
+            | Some("liteloaderbds")
+            | Some("levilamina")
+            | Some("bdsx")
+            | Some("allay")
+            | Some("nukkit")
+            | Some("powernukkitx")
+            | Some("pocketmine")
+            | Some("endstone") => Self::BedrockLike,
             Some("arclight")
             | Some("arclight_forge")
             | Some("arclight_neoforge")
@@ -59,9 +68,26 @@ pub fn normalize_core_key(value: &str) -> Option<&'static str> {
         "fabric" => Some("fabric"),
         "quilt" => Some("quilt"),
         "velocity" => Some("velocity"),
-        "bungeecord" | "waterfall" | "lightfall" => Some("lightfall"),
+        "bungeecord" => Some("bungeecord"),
+        "waterfall" => Some("waterfall"),
+        "lightfall" => Some("lightfall"),
         "travertine" => Some("travertine"),
         "flamecord" => Some("flamecord"),
+        "bds"
+        | "bedrock"
+        | "bedrock_server"
+        | "bedrock-server"
+        | "bedrockdedicatedserver"
+        | "bedrock_dedicated_server"
+        | "bedrock-dedicated-server" => Some("bds"),
+        "liteloaderbds" | "liteloader-bds" | "liteloader_bds" => Some("liteloaderbds"),
+        "levilamina" => Some("levilamina"),
+        "bdsx" => Some("bdsx"),
+        "allay" | "allaymc" => Some("allay"),
+        "nukkit" | "cloudburstnukkit" => Some("nukkit"),
+        "powernukkitx" | "powernukkit" => Some("powernukkitx"),
+        "pocketmine" | "pocketmine-mp" | "pocketmine_mp" => Some("pocketmine"),
+        "endstone" => Some("endstone"),
         "arclight" => Some("arclight"),
         "arclight-forge" | "arclight_forge" => Some("arclight_forge"),
         "arclight-neoforge" | "arclight_neoforge" => Some("arclight_neoforge"),
@@ -83,7 +109,8 @@ mod tests {
     #[test]
     fn normalizes_known_aliases() {
         assert_eq!(normalize_core_key("Paper"), Some("paper"));
-        assert_eq!(normalize_core_key("Waterfall"), Some("lightfall"));
+        assert_eq!(normalize_core_key("Waterfall"), Some("waterfall"));
+        assert_eq!(normalize_core_key("BungeeCord"), Some("bungeecord"));
         assert_eq!(normalize_core_key("Paper-Airplane"), Some("airplane"));
         assert_eq!(
             normalize_core_key("Arclight-Neoforge"),
@@ -91,6 +118,9 @@ mod tests {
         );
         assert_eq!(normalize_core_key("Folia"), Some("folia"));
         assert_eq!(normalize_core_key("FlameCord"), Some("flamecord"));
+        assert_eq!(normalize_core_key("bedrock-dedicated-server"), Some("bds"));
+        assert_eq!(normalize_core_key("LiteLoader-BDS"), Some("liteloaderbds"));
+        assert_eq!(normalize_core_key("AllayMC"), Some("allay"));
         assert_eq!(normalize_core_key("unknown-core"), None);
     }
 
@@ -110,9 +140,24 @@ mod tests {
         assert_eq!(CoreFamily::from_core_key("fabric"), CoreFamily::FabricLike);
         assert_eq!(CoreFamily::from_core_key("velocity"), CoreFamily::ProxyLike);
         assert_eq!(
+            CoreFamily::from_core_key("bungeecord"),
+            CoreFamily::ProxyLike
+        );
+        assert_eq!(
             CoreFamily::from_core_key("travertine"),
             CoreFamily::ProxyLike
         );
+        assert_eq!(CoreFamily::from_core_key("bds"), CoreFamily::BedrockLike);
+        assert_eq!(
+            CoreFamily::from_core_key("liteloaderbds"),
+            CoreFamily::BedrockLike
+        );
+        assert_eq!(
+            CoreFamily::from_core_key("levilamina"),
+            CoreFamily::BedrockLike
+        );
+        assert_eq!(CoreFamily::from_core_key("bdsx"), CoreFamily::BedrockLike);
+        assert_eq!(CoreFamily::from_core_key("allay"), CoreFamily::BedrockLike);
         assert_eq!(
             CoreFamily::from_core_key("pumpkin"),
             CoreFamily::NativeExecutable
