@@ -6,7 +6,8 @@ It builds on `sl-server-core-taxonomy` for normalized core-key handling.
 
 It is designed for host applications that need to answer questions such as:
 
-- Is this server Bukkit-like, Forge-like, Fabric-like, proxy-like, wrapper-driven, or a native executable?
+- Is this server Bukkit-like, Forge-like, Fabric-like, proxy-like, Bedrock-like, wrapper-driven, or a native executable?
+- Is this Java Edition or Bedrock Edition, and is it a game server, proxy, or wrapper?
 - Should the default extension surface be plugins, mods, datapacks, or wrapper plugins?
 - Is `starter` a valid default startup mode?
 - Should control prefer stdin, RCON, Docker stdio, or a wrapper console?
@@ -54,6 +55,7 @@ let bedrock = resolve_server_flavor_profile(&FlavorResolutionInput {
 assert_eq!(bedrock.flavor_kind, ServerFlavorKind::BedrockLike);
 assert_eq!(bedrock.default_startup_mode, Some(StartupMode::Exe));
 assert_eq!(bedrock.default_extension_kind, Some(ServerExtensionKind::Addon));
+assert_eq!(bedrock.edition, server_flavor_core::ServerEdition::Bedrock);
 
 let wrapped = resolve_server_flavor_profile(&FlavorResolutionInput {
     core_key: Some("paper"),
@@ -64,6 +66,7 @@ let wrapped = resolve_server_flavor_profile(&FlavorResolutionInput {
 });
 
 assert_eq!(wrapped.flavor_kind, ServerFlavorKind::WrappedServer);
+assert_eq!(wrapped.server_role, server_flavor_core::ServerRole::Wrapper);
 ```
 
 ## Design Notes

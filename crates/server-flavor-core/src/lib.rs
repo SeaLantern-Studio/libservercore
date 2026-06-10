@@ -23,6 +23,23 @@ pub enum ServerFlavorKind {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ServerEdition {
+    Java,
+    Bedrock,
+    Unknown,
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ServerRole {
+    GameServer,
+    Proxy,
+    Wrapper,
+    Unknown,
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ServerExtensionKind {
     Plugin,
     Mod,
@@ -105,6 +122,8 @@ pub enum RuntimeFamily {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ServerFlavorProfile {
     pub flavor_kind: ServerFlavorKind,
+    pub edition: ServerEdition,
+    pub server_role: ServerRole,
     pub display_key: &'static str,
     pub detected_core_key: Option<&'static str>,
     pub default_startup_mode: Option<StartupMode>,
@@ -166,6 +185,14 @@ impl ServerFlavorProfile {
 
     pub fn prefers_custom_startup(&self) -> bool {
         self.default_startup_mode == Some(StartupMode::Custom)
+    }
+
+    pub fn is_proxy(&self) -> bool {
+        self.server_role == ServerRole::Proxy
+    }
+
+    pub fn is_wrapper(&self) -> bool {
+        self.server_role == ServerRole::Wrapper
     }
 }
 
@@ -240,6 +267,20 @@ fn wrapped_profile(
 
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::WrappedServer,
+        edition: match input.core_key.and_then(normalize_core_key) {
+            Some("bds")
+            | Some("liteloaderbds")
+            | Some("levilamina")
+            | Some("bdsx")
+            | Some("allay")
+            | Some("nukkit")
+            | Some("powernukkitx")
+            | Some("pocketmine")
+            | Some("endstone") => ServerEdition::Bedrock,
+            Some(_) => ServerEdition::Java,
+            None => ServerEdition::Unknown,
+        },
+        server_role: ServerRole::Wrapper,
         display_key,
         detected_core_key: input.core_key.and_then(normalize_core_key),
         default_startup_mode: Some(StartupMode::Custom),
@@ -258,6 +299,8 @@ fn wrapped_profile(
 fn vanilla_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::VanillaLike,
+        edition: ServerEdition::Java,
+        server_role: ServerRole::GameServer,
         display_key: "vanilla_like",
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Jar),
@@ -276,6 +319,8 @@ fn vanilla_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
 fn bukkit_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::BukkitLike,
+        edition: ServerEdition::Java,
+        server_role: ServerRole::GameServer,
         display_key: "bukkit_like",
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Jar),
@@ -294,6 +339,8 @@ fn bukkit_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
 fn forge_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::ForgeLike,
+        edition: ServerEdition::Java,
+        server_role: ServerRole::GameServer,
         display_key: "forge_like",
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Starter),
@@ -312,6 +359,8 @@ fn forge_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
 fn fabric_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::FabricLike,
+        edition: ServerEdition::Java,
+        server_role: ServerRole::GameServer,
         display_key: "fabric_like",
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Jar),
@@ -330,6 +379,8 @@ fn fabric_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
 fn proxy_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::ProxyLike,
+        edition: ServerEdition::Java,
+        server_role: ServerRole::Proxy,
         display_key: "proxy_like",
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Jar),
@@ -348,6 +399,8 @@ fn proxy_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
 fn bedrock_dedicated_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::BedrockLike,
+        edition: ServerEdition::Bedrock,
+        server_role: ServerRole::GameServer,
         display_key: "bedrock_dedicated",
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Exe),
@@ -371,6 +424,8 @@ fn bedrock_dedicated_profile(core_key: Option<&'static str>) -> ServerFlavorProf
 fn bedrock_wrapped_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::BedrockLike,
+        edition: ServerEdition::Bedrock,
+        server_role: ServerRole::GameServer,
         display_key: "bedrock_wrapped",
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Exe),
@@ -395,6 +450,8 @@ fn bedrock_wrapped_profile(core_key: Option<&'static str>) -> ServerFlavorProfil
 fn bedrock_java_plugin_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::BedrockLike,
+        edition: ServerEdition::Bedrock,
+        server_role: ServerRole::GameServer,
         display_key: "bedrock_plugin_java",
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Jar),
@@ -413,6 +470,8 @@ fn bedrock_java_plugin_profile(core_key: Option<&'static str>) -> ServerFlavorPr
 fn bedrock_script_plugin_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::BedrockLike,
+        edition: ServerEdition::Bedrock,
+        server_role: ServerRole::GameServer,
         display_key: "bedrock_plugin_script",
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Custom),
@@ -431,6 +490,8 @@ fn bedrock_script_plugin_profile(core_key: Option<&'static str>) -> ServerFlavor
 fn bedrock_native_plugin_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::BedrockLike,
+        edition: ServerEdition::Bedrock,
+        server_role: ServerRole::GameServer,
         display_key: "bedrock_plugin_native",
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Exe),
@@ -455,6 +516,8 @@ fn bedrock_native_plugin_profile(core_key: Option<&'static str>) -> ServerFlavor
 fn mixed_extension_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::ForgeLike,
+        edition: ServerEdition::Java,
+        server_role: ServerRole::GameServer,
         display_key: "mixed_extension_server",
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Jar),
@@ -490,6 +553,8 @@ fn native_executable_profile(
 
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::NativeExecutable,
+        edition: ServerEdition::Java,
+        server_role: ServerRole::GameServer,
         display_key,
         detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Custom),
@@ -524,6 +589,12 @@ fn fallback_profile(input: &FlavorResolutionInput<'_>) -> ServerFlavorProfile {
             ServerFlavorKind::WrappedServer
         } else {
             ServerFlavorKind::Unknown
+        },
+        edition: ServerEdition::Unknown,
+        server_role: if matches!(startup_mode, Some(StartupMode::Custom)) {
+            ServerRole::Wrapper
+        } else {
+            ServerRole::Unknown
         },
         display_key: if matches!(startup_mode, Some(StartupMode::Custom)) {
             "custom_server"
@@ -568,8 +639,8 @@ fn special_configs(input: &FlavorResolutionInput<'_>) -> Vec<SpecialConfigKind> 
 mod tests {
     use super::{
         normalize_core_key, resolve_server_flavor_profile, runtime_family, ControlChannel,
-        FlavorResolutionInput, RuntimeFamily, ServerExtensionKind, ServerFlavorKind,
-        SpecialConfigKind, StartupMode, WrapperKind,
+        FlavorResolutionInput, RuntimeFamily, ServerEdition, ServerExtensionKind, ServerFlavorKind,
+        ServerRole, SpecialConfigKind, StartupMode, WrapperKind,
     };
 
     #[test]
@@ -597,6 +668,8 @@ mod tests {
         });
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::VanillaLike);
+        assert_eq!(profile.edition, ServerEdition::Java);
+        assert_eq!(profile.server_role, ServerRole::GameServer);
         assert_eq!(
             profile.default_extension_kind,
             Some(ServerExtensionKind::Datapack)
@@ -612,6 +685,8 @@ mod tests {
         });
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::BukkitLike);
+        assert_eq!(profile.edition, ServerEdition::Java);
+        assert_eq!(profile.server_role, ServerRole::GameServer);
         assert_eq!(profile.default_startup_mode, Some(StartupMode::Jar));
         assert_eq!(
             profile.default_extension_kind,
@@ -638,6 +713,7 @@ mod tests {
                 Some(ServerExtensionKind::Plugin),
                 "{core_key}"
             );
+            assert_eq!(profile.edition, ServerEdition::Java, "{core_key}");
         }
     }
 
@@ -649,6 +725,7 @@ mod tests {
         });
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::ForgeLike);
+        assert_eq!(profile.edition, ServerEdition::Java);
         assert_eq!(profile.default_startup_mode, Some(StartupMode::Starter));
         assert!(profile.supports_starter_install);
         assert_eq!(
@@ -665,6 +742,7 @@ mod tests {
         });
 
         assert!(profile.allow_manual_extension_switch);
+        assert_eq!(profile.server_role, ServerRole::GameServer);
         assert!(profile
             .extension_kinds
             .contains(&ServerExtensionKind::Plugin));
@@ -681,6 +759,7 @@ mod tests {
         });
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::NativeExecutable);
+        assert_eq!(profile.edition, ServerEdition::Java);
         assert_eq!(profile.default_startup_mode, Some(StartupMode::Custom));
         assert!(!profile.requires_java);
         assert_eq!(
@@ -698,6 +777,7 @@ mod tests {
         });
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::NativeExecutable);
+        assert_eq!(profile.server_role, ServerRole::GameServer);
         assert_eq!(profile.display_key, "cuberite");
         assert!(!profile.requires_java);
         assert!(profile.special_config_kinds.is_empty());
@@ -721,6 +801,7 @@ mod tests {
                 Some(ServerExtensionKind::Plugin),
                 "{core_key}"
             );
+            assert!(profile.is_proxy(), "{core_key}");
         }
     }
 
@@ -732,6 +813,8 @@ mod tests {
         });
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::BedrockLike);
+        assert_eq!(profile.edition, ServerEdition::Bedrock);
+        assert_eq!(profile.server_role, ServerRole::GameServer);
         assert_eq!(profile.display_key, "bedrock_dedicated");
         assert_eq!(profile.default_startup_mode, Some(StartupMode::Exe));
         assert_eq!(
@@ -760,6 +843,7 @@ mod tests {
                 Some(ServerExtensionKind::Plugin),
                 "{core_key}"
             );
+            assert_eq!(profile.edition, ServerEdition::Bedrock, "{core_key}");
             assert!(profile.allow_manual_extension_switch, "{core_key}");
             assert!(
                 profile
@@ -794,6 +878,7 @@ mod tests {
                 Some(ServerExtensionKind::Plugin),
                 "{core_key}"
             );
+            assert_eq!(profile.server_role, ServerRole::GameServer, "{core_key}");
             assert!(profile.requires_java, "{core_key}");
         }
     }
@@ -805,6 +890,7 @@ mod tests {
             ..FlavorResolutionInput::default()
         });
         assert_eq!(pocketmine.flavor_kind, ServerFlavorKind::BedrockLike);
+        assert_eq!(pocketmine.edition, ServerEdition::Bedrock);
         assert_eq!(pocketmine.display_key, "bedrock_plugin_script");
         assert_eq!(pocketmine.default_startup_mode, Some(StartupMode::Custom));
         assert!(!pocketmine.requires_java);
@@ -814,6 +900,7 @@ mod tests {
             ..FlavorResolutionInput::default()
         });
         assert_eq!(endstone.flavor_kind, ServerFlavorKind::BedrockLike);
+        assert_eq!(endstone.edition, ServerEdition::Bedrock);
         assert_eq!(endstone.display_key, "bedrock_plugin_native");
         assert_eq!(endstone.default_startup_mode, Some(StartupMode::Exe));
         assert!(!endstone.requires_java);
@@ -829,6 +916,8 @@ mod tests {
         });
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::WrappedServer);
+        assert_eq!(profile.server_role, ServerRole::Wrapper);
+        assert!(profile.is_wrapper());
         assert_eq!(
             profile.default_extension_kind,
             Some(ServerExtensionKind::McdrPlugin)
@@ -848,6 +937,8 @@ mod tests {
         });
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::WrappedServer);
+        assert_eq!(profile.edition, ServerEdition::Unknown);
+        assert_eq!(profile.server_role, ServerRole::Wrapper);
         assert!(profile.allow_manual_extension_switch);
         assert_eq!(
             profile.preferred_control_channel,
@@ -886,6 +977,7 @@ mod tests {
         );
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::BukkitLike);
+        assert_eq!(profile.edition, ServerEdition::Java);
         assert!(profile.supports_extension_kind(ServerExtensionKind::Plugin));
         assert!(!profile.prefers_custom_startup());
     }

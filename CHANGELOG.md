@@ -9,3 +9,4 @@
 - Model `vanilla` explicitly as `VanillaLike` instead of folding it into the Bukkit family.
 - Keep proxy canonical keys distinct, including `bungeecord`, `waterfall`, and `lightfall`, instead of normalizing them all to one fork name.
 - Add first-class Bedrock modeling for `bds`, `liteloaderbds`, `levilamina`, `bdsx`, `allay`, `nukkit`, `powernukkitx`, `pocketmine`, and `endstone`.
+- Add stable public flavor metadata for `edition` and `server_role` so host applications do not need to infer semantics from `display_key`.
