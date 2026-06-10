@@ -20,7 +20,7 @@ use server_flavor_core::{
 };
 
 let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
-    core_key: Some("paper"),
+    core_key: Some("folia"),
     runtime_kind: Some("local"),
     startup_mode: Some("jar"),
     wrapper_kind: None,
@@ -31,6 +31,17 @@ assert_eq!(profile.flavor_kind, ServerFlavorKind::BukkitLike);
 assert_eq!(profile.default_startup_mode, Some(StartupMode::Jar));
 assert_eq!(profile.default_extension_kind, Some(ServerExtensionKind::Plugin));
 assert_eq!(profile.preferred_control_channel, ControlChannel::Stdin);
+
+let vanilla = resolve_server_flavor_profile(&FlavorResolutionInput {
+    core_key: Some("vanilla"),
+    runtime_kind: Some("local"),
+    startup_mode: Some("jar"),
+    wrapper_kind: None,
+    has_pumpkin_config: false,
+});
+
+assert_eq!(vanilla.flavor_kind, ServerFlavorKind::VanillaLike);
+assert_eq!(vanilla.default_extension_kind, Some(ServerExtensionKind::Datapack));
 
 let wrapped = resolve_server_flavor_profile(&FlavorResolutionInput {
     core_key: Some("paper"),

@@ -187,22 +187,21 @@ pub fn resolve_server_flavor_profile(input: &FlavorResolutionInput<'_>) -> Serve
 
     let normalized_core = input.core_key.and_then(normalize_core_key);
     match normalized_core {
-        Some("paper")
-        | Some("spigot")
-        | Some("purpur")
-        | Some("leaves")
+        Some("vanilla") => vanilla_like_profile(normalized_core),
+        Some("paper") | Some("folia") | Some("spigot") | Some("purpur") | Some("pufferfish")
+        | Some("leaves") | Some("tuinity") | Some("airplane") | Some("glowstone")
         | Some("bukkit") => bukkit_like_profile(normalized_core),
         Some("forge") | Some("neoforge") => forge_like_profile(normalized_core),
         Some("fabric") | Some("quilt") => fabric_like_profile(normalized_core),
-        Some("velocity") | Some("bungeecord") | Some("waterfall") | Some("lightfall") => {
-            proxy_like_profile(normalized_core)
-        }
+        Some("velocity") | Some("bungeecord") | Some("waterfall") | Some("lightfall")
+        | Some("travertine") | Some("flamecord") => proxy_like_profile(normalized_core),
         Some("arclight")
         | Some("arclight_forge")
         | Some("arclight_neoforge")
         | Some("mohist")
         | Some("catserver") => mixed_extension_profile(normalized_core),
         Some("pumpkin") => pumpkin_profile(),
+        Some("cuberite") => native_executable_profile(Some("cuberite"), "cuberite"),
         Some(_) | None => fallback_profile(input),
     }
 }
@@ -239,6 +238,24 @@ fn wrapped_profile(
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::WrapperConsole,
         special_config_kinds: special_configs(input),
+    }
+}
+
+fn vanilla_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
+    ServerFlavorProfile {
+        flavor_kind: ServerFlavorKind::VanillaLike,
+        display_key: "vanilla_like",
+        detected_core_key: core_key,
+        default_startup_mode: Some(StartupMode::Jar),
+        preferred_candidate_modes: vec![StartupMode::Jar, StartupMode::Sh, StartupMode::Bat],
+        requires_java: true,
+        supports_starter_install: false,
+        supports_custom_wrapper: true,
+        extension_kinds: vec![ServerExtensionKind::Datapack],
+        default_extension_kind: Some(ServerExtensionKind::Datapack),
+        allow_manual_extension_switch: false,
+        preferred_control_channel: ControlChannel::Stdin,
+        special_config_kinds: vec![SpecialConfigKind::ServerProperties],
     }
 }
 
@@ -337,10 +354,23 @@ fn mixed_extension_profile(core_key: Option<&'static str>) -> ServerFlavorProfil
 }
 
 fn pumpkin_profile() -> ServerFlavorProfile {
+    native_executable_profile(Some("pumpkin"), "pumpkin")
+}
+
+fn native_executable_profile(
+    core_key: Option<&'static str>,
+    display_key: &'static str,
+) -> ServerFlavorProfile {
+    let special_config_kinds = if matches!(core_key, Some("pumpkin")) {
+        vec![SpecialConfigKind::PumpkinToml]
+    } else {
+        Vec::new()
+    };
+
     ServerFlavorProfile {
         flavor_kind: ServerFlavorKind::NativeExecutable,
-        display_key: "pumpkin",
-        detected_core_key: Some("pumpkin"),
+        display_key,
+        detected_core_key: core_key,
         default_startup_mode: Some(StartupMode::Custom),
         preferred_candidate_modes: vec![StartupMode::Custom, StartupMode::Bat],
         requires_java: false,
@@ -350,7 +380,7 @@ fn pumpkin_profile() -> ServerFlavorProfile {
         default_extension_kind: Some(ServerExtensionKind::Datapack),
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
-        special_config_kinds: vec![SpecialConfigKind::PumpkinToml],
+        special_config_kinds,
     }
 }
 
@@ -402,7 +432,9 @@ fn fallback_profile(input: &FlavorResolutionInput<'_>) -> ServerFlavorProfile {
 
 fn special_configs(input: &FlavorResolutionInput<'_>) -> Vec<SpecialConfigKind> {
     let mut kinds = Vec::new();
-    if input.has_pumpkin_config || matches!(input.core_key.and_then(normalize_core_key), Some("pumpkin")) {
+    if input.has_pumpkin_config
+        || matches!(input.core_key.and_then(normalize_core_key), Some("pumpkin"))
+    {
         kinds.push(SpecialConfigKind::PumpkinToml);
     }
     if !matches!(input.core_key.and_then(normalize_core_key), Some("pumpkin")) {
@@ -414,17 +446,37 @@ fn special_configs(input: &FlavorResolutionInput<'_>) -> Vec<SpecialConfigKind> 
 #[cfg(test)]
 mod tests {
     use super::{
-        resolve_server_flavor_profile, ControlChannel, FlavorResolutionInput, RuntimeFamily,
-        ServerExtensionKind, ServerFlavorKind, SpecialConfigKind, StartupMode, WrapperKind,
-        normalize_core_key, runtime_family,
+        normalize_core_key, resolve_server_flavor_profile, runtime_family, ControlChannel,
+        FlavorResolutionInput, RuntimeFamily, ServerExtensionKind, ServerFlavorKind,
+        SpecialConfigKind, StartupMode, WrapperKind,
     };
 
     #[test]
     fn normalizes_known_core_aliases() {
         assert_eq!(normalize_core_key("Paper"), Some("paper"));
-        assert_eq!(normalize_core_key("Arclight-Neoforge"), Some("arclight_neoforge"));
+        assert_eq!(
+            normalize_core_key("Arclight-Neoforge"),
+            Some("arclight_neoforge")
+        );
         assert_eq!(normalize_core_key("Waterfall"), Some("lightfall"));
+        assert_eq!(normalize_core_key("Folia"), Some("folia"));
+        assert_eq!(normalize_core_key("Paper-Airplane"), Some("airplane"));
         assert_eq!(normalize_core_key("unknown-core"), None);
+    }
+
+    #[test]
+    fn resolves_vanilla_like_profile() {
+        let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+            core_key: Some("vanilla"),
+            ..FlavorResolutionInput::default()
+        });
+
+        assert_eq!(profile.flavor_kind, ServerFlavorKind::VanillaLike);
+        assert_eq!(
+            profile.default_extension_kind,
+            Some(ServerExtensionKind::Datapack)
+        );
+        assert_eq!(profile.detected_core_key, Some("vanilla"));
     }
 
     #[test]
@@ -436,8 +488,32 @@ mod tests {
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::BukkitLike);
         assert_eq!(profile.default_startup_mode, Some(StartupMode::Jar));
-        assert_eq!(profile.default_extension_kind, Some(ServerExtensionKind::Plugin));
+        assert_eq!(
+            profile.default_extension_kind,
+            Some(ServerExtensionKind::Plugin)
+        );
         assert!(!profile.allow_manual_extension_switch);
+    }
+
+    #[test]
+    fn resolves_additional_bukkit_like_forks() {
+        for core_key in ["folia", "pufferfish", "tuinity", "airplane", "glowstone"] {
+            let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+                core_key: Some(core_key),
+                ..FlavorResolutionInput::default()
+            });
+
+            assert_eq!(
+                profile.flavor_kind,
+                ServerFlavorKind::BukkitLike,
+                "{core_key}"
+            );
+            assert_eq!(
+                profile.default_extension_kind,
+                Some(ServerExtensionKind::Plugin),
+                "{core_key}"
+            );
+        }
     }
 
     #[test]
@@ -450,7 +526,10 @@ mod tests {
         assert_eq!(profile.flavor_kind, ServerFlavorKind::ForgeLike);
         assert_eq!(profile.default_startup_mode, Some(StartupMode::Starter));
         assert!(profile.supports_starter_install);
-        assert_eq!(profile.default_extension_kind, Some(ServerExtensionKind::Mod));
+        assert_eq!(
+            profile.default_extension_kind,
+            Some(ServerExtensionKind::Mod)
+        );
     }
 
     #[test]
@@ -461,7 +540,9 @@ mod tests {
         });
 
         assert!(profile.allow_manual_extension_switch);
-        assert!(profile.extension_kinds.contains(&ServerExtensionKind::Plugin));
+        assert!(profile
+            .extension_kinds
+            .contains(&ServerExtensionKind::Plugin));
         assert!(profile.extension_kinds.contains(&ServerExtensionKind::Mod));
     }
 
@@ -477,7 +558,45 @@ mod tests {
         assert_eq!(profile.flavor_kind, ServerFlavorKind::NativeExecutable);
         assert_eq!(profile.default_startup_mode, Some(StartupMode::Custom));
         assert!(!profile.requires_java);
-        assert_eq!(profile.special_config_kinds, vec![SpecialConfigKind::PumpkinToml]);
+        assert_eq!(
+            profile.special_config_kinds,
+            vec![SpecialConfigKind::PumpkinToml]
+        );
+    }
+
+    #[test]
+    fn resolves_cuberite_as_native_executable() {
+        let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+            core_key: Some("cuberite"),
+            startup_mode: Some("custom"),
+            ..FlavorResolutionInput::default()
+        });
+
+        assert_eq!(profile.flavor_kind, ServerFlavorKind::NativeExecutable);
+        assert_eq!(profile.display_key, "cuberite");
+        assert!(!profile.requires_java);
+        assert!(profile.special_config_kinds.is_empty());
+    }
+
+    #[test]
+    fn resolves_additional_proxy_forks() {
+        for core_key in ["travertine", "flamecord"] {
+            let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+                core_key: Some(core_key),
+                ..FlavorResolutionInput::default()
+            });
+
+            assert_eq!(
+                profile.flavor_kind,
+                ServerFlavorKind::ProxyLike,
+                "{core_key}"
+            );
+            assert_eq!(
+                profile.default_extension_kind,
+                Some(ServerExtensionKind::Plugin),
+                "{core_key}"
+            );
+        }
     }
 
     #[test]
@@ -490,8 +609,14 @@ mod tests {
         });
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::WrappedServer);
-        assert_eq!(profile.default_extension_kind, Some(ServerExtensionKind::McdrPlugin));
-        assert_eq!(profile.preferred_control_channel, ControlChannel::WrapperConsole);
+        assert_eq!(
+            profile.default_extension_kind,
+            Some(ServerExtensionKind::McdrPlugin)
+        );
+        assert_eq!(
+            profile.preferred_control_channel,
+            ControlChannel::WrapperConsole
+        );
     }
 
     #[test]
@@ -504,7 +629,10 @@ mod tests {
 
         assert_eq!(profile.flavor_kind, ServerFlavorKind::WrappedServer);
         assert!(profile.allow_manual_extension_switch);
-        assert_eq!(profile.preferred_control_channel, ControlChannel::WrapperConsole);
+        assert_eq!(
+            profile.preferred_control_channel,
+            ControlChannel::WrapperConsole
+        );
     }
 
     #[test]
@@ -520,7 +648,10 @@ mod tests {
     #[test]
     fn runtime_family_classifies_known_runtime_kinds() {
         assert_eq!(runtime_family(Some("local")), RuntimeFamily::Local);
-        assert_eq!(runtime_family(Some("docker_itzg")), RuntimeFamily::DockerItzg);
+        assert_eq!(
+            runtime_family(Some("docker_itzg")),
+            RuntimeFamily::DockerItzg
+        );
         assert_eq!(runtime_family(Some("mcdr_local")), RuntimeFamily::Other);
         assert_eq!(runtime_family(None), RuntimeFamily::Local);
     }

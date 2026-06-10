@@ -9,6 +9,8 @@ This repository is intended to host publishable crates that can be consumed by a
 - `sl-server-core-taxonomy`: normalize Minecraft server core keys and provide coarse taxonomy helpers.
 - `sl-server-flavor-core`: resolve high-level server flavor and capability profiles from core type, runtime kind, startup mode, and wrapper hints.
 
+The current taxonomy intentionally covers vanilla, Bukkit-family forks such as Paper/Folia/Pufferfish, Forge/Fabric ecosystems, proxy forks such as Velocity/Travertine/FlameCord, mixed plugin+mod hybrids, and native executables such as Pumpkin/Cuberite.
+
 ## Status
 
 This repository is in early bootstrap. The first crate focuses on flavor modeling so host applications can stop scattering `if core_type == ...` logic across provisioning, startup, and extension-management flows.
