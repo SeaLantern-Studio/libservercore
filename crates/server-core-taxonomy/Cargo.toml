@@ -1,0 +1,28 @@
+[package]
+name = "sl-server-core-taxonomy"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Core Minecraft server taxonomy and normalized core-key helpers"
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["minecraft", "server", "taxonomy", "core", "modding"]
+categories = ["config", "game-development"]
+include = ["src/**/*", "Cargo.toml", "README.md", "../../LICENSE"]
+
+[lib]
+name = "server_core_taxonomy"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = []
+serde = ["dep:serde"]

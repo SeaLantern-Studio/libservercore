@@ -1,0 +1,12 @@
+[workspace]
+members = ["crates/server-core-taxonomy", "crates/server-flavor-core"]
+resolver = "2"
+
+[workspace.package]
+authors = ["miaom"]
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/miaom/libservercore"
+homepage = "https://github.com/miaom/libservercore"
+readme = "README.md"
+rust-version = "1.81"

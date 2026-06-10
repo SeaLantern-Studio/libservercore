@@ -1,0 +1,29 @@
+[package]
+name = "sl-server-flavor-core"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Core server flavor modeling and capability resolution"
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["minecraft", "server", "flavor", "modding", "plugin"]
+categories = ["config", "game-development"]
+include = ["src/**/*", "Cargo.toml", "README.md", "../../LICENSE"]
+
+[lib]
+name = "server_flavor_core"
+path = "src/lib.rs"
+
+[dependencies]
+sl-server-core-taxonomy = { path = "../server-core-taxonomy", version = "0.1.0" }
+serde = { version = "1", features = ["derive"], optional = true }
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = []
+serde = ["dep:serde", "sl-server-core-taxonomy/serde"]
