@@ -1,29 +1,32 @@
 [package]
-name = "sl-server-flavor-core"
-version = "0.2.0"
+name = "sl-libscv"
+version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-description = "Core server flavor modeling and capability resolution"
+description = "File-centered server configuration discovery and IO support"
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 rust-version.workspace = true
 readme = "README.md"
-keywords = ["minecraft", "server", "flavor", "modding", "plugin"]
+keywords = ["minecraft", "server", "config", "yaml", "properties"]
 categories = ["config", "game-development"]
 include = ["src/**/*", "Cargo.toml", "README.md", "../../LICENSE"]
 
 [lib]
-name = "server_flavor_core"
+name = "sl_libscv"
 path = "src/lib.rs"
 
 [dependencies]
 sl-server-core-taxonomy = { path = "../server-core-taxonomy", version = "0.1.0" }
+sl-server-flavor-core = { path = "../server-flavor-core", version = "0.2.0" }
 serde = { version = "1", features = ["derive"], optional = true }
+toml_edit = "0.22"
+serde_json = "1"
 
 [package.metadata.docs.rs]
 all-features = true
 
 [features]
 default = []
-serde = ["dep:serde", "sl-server-core-taxonomy/serde"]
+serde = ["dep:serde", "sl-server-flavor-core/serde", "sl-server-core-taxonomy/serde"]

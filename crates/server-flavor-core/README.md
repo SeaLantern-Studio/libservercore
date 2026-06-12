@@ -11,6 +11,7 @@ It is designed for host applications that need to answer questions such as:
 - Should the default extension surface be plugins, mods, datapacks, or wrapper plugins?
 - Is `starter` a valid default startup mode?
 - Should control prefer stdin, RCON, Docker stdio, or a wrapper console?
+- Which configuration surfaces belong to this server family or concrete core key?
 
 ## Example
 
@@ -67,6 +68,18 @@ let wrapped = resolve_server_flavor_profile(&FlavorResolutionInput {
 
 assert_eq!(wrapped.flavor_kind, ServerFlavorKind::WrappedServer);
 assert_eq!(wrapped.server_role, server_flavor_core::ServerRole::Wrapper);
+
+let paper_configs = resolve_server_flavor_profile(&FlavorResolutionInput {
+    core_key: Some("paper"),
+    runtime_kind: Some("local"),
+    startup_mode: Some("jar"),
+    wrapper_kind: None,
+    has_pumpkin_config: false,
+});
+
+assert!(paper_configs.config_surface("server_properties").is_some());
+assert!(paper_configs.config_surface("plugins_root").is_some());
+assert!(paper_configs.config_surface("paper_yml").is_some());
 ```
 
 ## Design Notes
@@ -74,3 +87,5 @@ assert_eq!(wrapped.server_role, server_flavor_core::ServerRole::Wrapper);
 This crate intentionally models flavor as a derived capability profile instead of making raw `core_type` strings carry every downstream behavior decision.
 
 The current model covers both Java Edition and Bedrock Edition server families, including proxy forks, native binaries, and Bedrock wrapper ecosystems such as LiteLoaderBDS, LeviLamina, and BDSX.
+
+It also now exposes coarse configuration-surface metadata that downstream crates can use to discover server-core config files, plugin config roots, and generic fallback config directories.

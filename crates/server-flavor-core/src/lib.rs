@@ -105,6 +105,43 @@ pub enum SpecialConfigKind {
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ConfigSurfaceOwner {
+    ServerCore,
+    Plugin,
+    FallbackDirectory,
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ConfigFormat {
+    Yaml,
+    Toml,
+    Json,
+    Properties,
+    Text,
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ConfigSurfaceKind {
+    CanonicalFile,
+    PluginDirectory,
+    FallbackDirectory,
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct ConfigSurface {
+    pub key: &'static str,
+    pub owner: ConfigSurfaceOwner,
+    pub kind: ConfigSurfaceKind,
+    pub relative_path: &'static str,
+    pub format: Option<ConfigFormat>,
+    pub recursive: bool,
+}
+
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum WrapperKind {
     Mcdr,
     Generic,
@@ -136,6 +173,7 @@ pub struct ServerFlavorProfile {
     pub allow_manual_extension_switch: bool,
     pub preferred_control_channel: ControlChannel,
     pub special_config_kinds: Vec<SpecialConfigKind>,
+    pub config_surfaces: Vec<ConfigSurface>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
@@ -193,6 +231,10 @@ impl ServerFlavorProfile {
 
     pub fn is_wrapper(&self) -> bool {
         self.server_role == ServerRole::Wrapper
+    }
+
+    pub fn config_surface(&self, key: &str) -> Option<&ConfigSurface> {
+        self.config_surfaces.iter().find(|surface| surface.key == key)
     }
 }
 
@@ -293,6 +335,7 @@ fn wrapped_profile(
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::WrapperConsole,
         special_config_kinds: special_configs(input),
+        config_surfaces: config_surfaces(input),
     }
 }
 
@@ -313,6 +356,7 @@ fn vanilla_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: vec![SpecialConfigKind::ServerProperties],
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -333,6 +377,7 @@ fn bukkit_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: vec![SpecialConfigKind::ServerProperties],
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -353,6 +398,7 @@ fn forge_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: vec![SpecialConfigKind::ServerProperties],
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -373,6 +419,7 @@ fn fabric_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: vec![SpecialConfigKind::ServerProperties],
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -393,6 +440,7 @@ fn proxy_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: Vec::new(),
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -418,6 +466,7 @@ fn bedrock_dedicated_profile(core_key: Option<&'static str>) -> ServerFlavorProf
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: vec![SpecialConfigKind::ServerProperties],
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -444,6 +493,7 @@ fn bedrock_wrapped_profile(core_key: Option<&'static str>) -> ServerFlavorProfil
         allow_manual_extension_switch: true,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: vec![SpecialConfigKind::ServerProperties],
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -464,6 +514,7 @@ fn bedrock_java_plugin_profile(core_key: Option<&'static str>) -> ServerFlavorPr
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: Vec::new(),
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -484,6 +535,7 @@ fn bedrock_script_plugin_profile(core_key: Option<&'static str>) -> ServerFlavor
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: Vec::new(),
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -510,6 +562,7 @@ fn bedrock_native_plugin_profile(core_key: Option<&'static str>) -> ServerFlavor
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: Vec::new(),
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -534,6 +587,7 @@ fn mixed_extension_profile(core_key: Option<&'static str>) -> ServerFlavorProfil
         allow_manual_extension_switch: true,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: vec![SpecialConfigKind::ServerProperties],
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -567,6 +621,7 @@ fn native_executable_profile(
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds,
+        config_surfaces: config_surfaces_for_core(core_key),
     }
 }
 
@@ -619,7 +674,115 @@ fn fallback_profile(input: &FlavorResolutionInput<'_>) -> ServerFlavorProfile {
         allow_manual_extension_switch: true,
         preferred_control_channel,
         special_config_kinds: special_configs(input),
+        config_surfaces: config_surfaces(input),
     }
+}
+
+fn config_surfaces(input: &FlavorResolutionInput<'_>) -> Vec<ConfigSurface> {
+    config_surfaces_for_core(input.core_key.and_then(normalize_core_key))
+}
+
+fn config_surfaces_for_core(core_key: Option<&'static str>) -> Vec<ConfigSurface> {
+    let mut surfaces = base_config_surfaces();
+
+    match core_key {
+        Some("paper") | Some("folia") | Some("purpur") | Some("pufferfish") | Some("leaves") => {
+            surfaces.extend([
+                canonical_file("bukkit_yml", "bukkit.yml", ConfigFormat::Yaml),
+                canonical_file("spigot_yml", "spigot.yml", ConfigFormat::Yaml),
+                canonical_file("paper_yml", "paper.yml", ConfigFormat::Yaml),
+                canonical_file("paper_yaml", "paper.yaml", ConfigFormat::Yaml),
+                canonical_file("paper_global_yml", "config/paper-global.yml", ConfigFormat::Yaml),
+                canonical_file("paper_global_yaml", "config/paper-global.yaml", ConfigFormat::Yaml),
+                canonical_file(
+                    "paper_world_defaults_yml",
+                    "config/paper-world-defaults.yml",
+                    ConfigFormat::Yaml,
+                ),
+                canonical_file(
+                    "paper_world_defaults_yaml",
+                    "config/paper-world-defaults.yaml",
+                    ConfigFormat::Yaml,
+                ),
+            ]);
+        }
+        Some("spigot") | Some("bukkit") | Some("glowstone") | Some("tuinity") | Some("airplane") => {
+            surfaces.extend([
+                canonical_file("bukkit_yml", "bukkit.yml", ConfigFormat::Yaml),
+                canonical_file("spigot_yml", "spigot.yml", ConfigFormat::Yaml),
+            ]);
+
+            if matches!(core_key, Some("tuinity") | Some("airplane")) {
+                surfaces.push(canonical_file("paper_yml", "paper.yml", ConfigFormat::Yaml));
+            }
+        }
+        Some("pumpkin") => {
+            surfaces.push(canonical_file("pumpkin_toml", "pumpkin.toml", ConfigFormat::Toml));
+        }
+        _ => {}
+    }
+
+    dedup_config_surfaces(surfaces)
+}
+
+fn base_config_surfaces() -> Vec<ConfigSurface> {
+    vec![
+        canonical_file("server_properties", "server.properties", ConfigFormat::Properties),
+        plugin_directory("plugins_root", "plugins"),
+        fallback_directory("defaultconfig", "defaultconfig"),
+        fallback_directory("defaultconfigs", "defaultconfigs"),
+        fallback_directory("config", "config"),
+        fallback_directory("configs", "configs"),
+    ]
+}
+
+fn canonical_file(
+    key: &'static str,
+    relative_path: &'static str,
+    format: ConfigFormat,
+) -> ConfigSurface {
+    ConfigSurface {
+        key,
+        owner: ConfigSurfaceOwner::ServerCore,
+        kind: ConfigSurfaceKind::CanonicalFile,
+        relative_path,
+        format: Some(format),
+        recursive: false,
+    }
+}
+
+fn plugin_directory(key: &'static str, relative_path: &'static str) -> ConfigSurface {
+    ConfigSurface {
+        key,
+        owner: ConfigSurfaceOwner::Plugin,
+        kind: ConfigSurfaceKind::PluginDirectory,
+        relative_path,
+        format: None,
+        recursive: true,
+    }
+}
+
+fn fallback_directory(key: &'static str, relative_path: &'static str) -> ConfigSurface {
+    ConfigSurface {
+        key,
+        owner: ConfigSurfaceOwner::FallbackDirectory,
+        kind: ConfigSurfaceKind::FallbackDirectory,
+        relative_path,
+        format: None,
+        recursive: true,
+    }
+}
+
+fn dedup_config_surfaces(surfaces: Vec<ConfigSurface>) -> Vec<ConfigSurface> {
+    let mut deduped = Vec::new();
+
+    for surface in surfaces {
+        if !deduped.iter().any(|existing: &ConfigSurface| existing.key == surface.key) {
+            deduped.push(surface);
+        }
+    }
+
+    deduped
 }
 
 fn special_configs(input: &FlavorResolutionInput<'_>) -> Vec<SpecialConfigKind> {
@@ -638,9 +801,10 @@ fn special_configs(input: &FlavorResolutionInput<'_>) -> Vec<SpecialConfigKind> 
 #[cfg(test)]
 mod tests {
     use super::{
-        normalize_core_key, resolve_server_flavor_profile, runtime_family, ControlChannel,
-        FlavorResolutionInput, RuntimeFamily, ServerEdition, ServerExtensionKind, ServerFlavorKind,
-        ServerRole, SpecialConfigKind, StartupMode, WrapperKind,
+        normalize_core_key, resolve_server_flavor_profile, runtime_family, ConfigFormat,
+        ConfigSurfaceKind, ConfigSurfaceOwner, ControlChannel, FlavorResolutionInput,
+        RuntimeFamily, ServerEdition, ServerExtensionKind, ServerFlavorKind, ServerRole,
+        SpecialConfigKind, StartupMode, WrapperKind,
     };
 
     #[test]
@@ -980,5 +1144,65 @@ mod tests {
         assert_eq!(profile.edition, ServerEdition::Java);
         assert!(profile.supports_extension_kind(ServerExtensionKind::Plugin));
         assert!(!profile.prefers_custom_startup());
+    }
+
+    #[test]
+    fn bukkit_like_profile_exposes_server_and_plugin_config_surfaces() {
+        let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+            core_key: Some("paper"),
+            ..FlavorResolutionInput::default()
+        });
+
+        let server_properties = profile
+            .config_surface("server_properties")
+            .expect("server.properties surface should exist");
+        assert_eq!(server_properties.owner, ConfigSurfaceOwner::ServerCore);
+        assert_eq!(server_properties.kind, ConfigSurfaceKind::CanonicalFile);
+        assert_eq!(server_properties.relative_path, "server.properties");
+        assert_eq!(server_properties.format, Some(ConfigFormat::Properties));
+
+        let plugins_root = profile
+            .config_surface("plugins_root")
+            .expect("plugins root should exist");
+        assert_eq!(plugins_root.owner, ConfigSurfaceOwner::Plugin);
+        assert_eq!(plugins_root.kind, ConfigSurfaceKind::PluginDirectory);
+        assert!(plugins_root.recursive);
+    }
+
+    #[test]
+    fn paper_like_profile_exposes_paper_specific_config_files() {
+        let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+            core_key: Some("paper"),
+            ..FlavorResolutionInput::default()
+        });
+
+        assert!(profile.config_surface("paper_yml").is_some());
+        assert!(profile.config_surface("paper_yaml").is_some());
+        assert!(profile.config_surface("paper_global_yml").is_some());
+        assert!(profile.config_surface("paper_world_defaults_yml").is_some());
+    }
+
+    #[test]
+    fn spigot_like_profile_exposes_bukkit_and_spigot_configs() {
+        let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+            core_key: Some("spigot"),
+            ..FlavorResolutionInput::default()
+        });
+
+        assert!(profile.config_surface("bukkit_yml").is_some());
+        assert!(profile.config_surface("spigot_yml").is_some());
+        assert!(profile.config_surface("paper_yml").is_none());
+    }
+
+    #[test]
+    fn fallback_profile_keeps_generic_config_roots() {
+        let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+            core_key: Some("mystery"),
+            ..FlavorResolutionInput::default()
+        });
+
+        for key in ["plugins_root", "defaultconfig", "defaultconfigs", "config", "configs"] {
+            assert!(profile.config_surface(key).is_some(), "missing surface {key}");
+        }
     }
 }

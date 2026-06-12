@@ -1,25 +1,32 @@
 [package]
-name = "sl-server-flavor-core"
-version = "0.2.0"
+name = "sl-server-startup-scan-core"
+version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-description = "Core server flavor modeling and capability resolution"
+description = "Shared startup candidate scanning logic for Minecraft server folders and archives"
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 rust-version.workspace = true
 readme = "README.md"
-keywords = ["minecraft", "server", "flavor", "modding", "plugin"]
+keywords = ["minecraft", "server", "startup", "scan", "archive"]
 categories = ["config", "game-development"]
 include = ["src/**/*", "Cargo.toml", "README.md", "../../LICENSE"]
 
 [lib]
-name = "server_flavor_core"
+name = "server_startup_scan_core"
 path = "src/lib.rs"
 
 [dependencies]
-sl-server-core-taxonomy = { path = "../server-core-taxonomy", version = "0.1.0" }
+flate2 = "1"
 serde = { version = "1", features = ["derive"], optional = true }
+sl-server-core-taxonomy = { path = "../server-core-taxonomy", version = "0.1.0" }
+tar = "0.4"
+uuid = { version = "1", features = ["v4"] }
+zip = "2.4"
+
+[dev-dependencies]
+tempfile = "3"
 
 [package.metadata.docs.rs]
 all-features = true

@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/server-core-taxonomy", "crates/server-flavor-core"]
+members = ["crates/server-core-taxonomy", "crates/server-flavor-core", "crates/server-flow", "crates/sl-libscv", "crates/sl-server-startup-scan-core", "crates/sl-server-launch-plan-core"]
 resolver = "2"
 
 [workspace.package]

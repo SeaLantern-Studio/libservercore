@@ -1,0 +1,33 @@
+[package]
+name = "sl-server-launch-plan-core"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "Mode-aware local launch planning built on startup scan and server flow primitives"
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+keywords = ["minecraft", "server", "launch", "plan", "startup"]
+categories = ["config", "game-development"]
+include = ["src/**/*", "Cargo.toml", "README.md", "../../LICENSE"]
+
+[lib]
+name = "server_launch_plan_core"
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+sl-server-flow = { path = "../server-flow", version = "0.1.0" }
+sl-server-startup-scan-core = { path = "../sl-server-startup-scan-core", version = "0.1.0" }
+
+[dev-dependencies]
+tempfile = "3"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = []
+serde = ["dep:serde", "sl-server-flow/serde", "sl-server-startup-scan-core/serde"]
