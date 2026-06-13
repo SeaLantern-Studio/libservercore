@@ -5,7 +5,10 @@ use std::collections::HashSet;
 
 #[cfg(unix)]
 fn list_child_pids_unix(ppid: u32) -> Vec<u32> {
-    let output = Command::new("pgrep").arg("-P").arg(ppid.to_string()).output();
+    let output = Command::new("pgrep")
+        .arg("-P")
+        .arg(ppid.to_string())
+        .output();
 
     let Ok(output) = output else {
         return Vec::new();
@@ -55,12 +58,16 @@ fn force_kill_process_tree_by_pid_unix(root_pid: u32) -> Result<(), String> {
     pids.dedup();
 
     for pid in pids.iter().rev() {
-        let _ = Command::new("kill").args(["-TERM", &pid.to_string()]).status();
+        let _ = Command::new("kill")
+            .args(["-TERM", &pid.to_string()])
+            .status();
     }
     std::thread::sleep(std::time::Duration::from_millis(300));
     for pid in pids.iter().rev() {
         if is_process_alive_unix(*pid) {
-            let _ = Command::new("kill").args(["-KILL", &pid.to_string()]).status();
+            let _ = Command::new("kill")
+                .args(["-KILL", &pid.to_string()])
+                .status();
         }
     }
 

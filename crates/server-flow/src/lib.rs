@@ -17,7 +17,9 @@ pub use spec::{
     LocalLaunchSpec, ManagedJavaMode, PortProbeKind, PortProbeSpec, ProcessStopStrategy,
     ScriptLaunchSpec, StarterInstallSpec,
 };
-pub use status::{probe_local_status, LocalFlowState, LocalFlowStatus, OwnedProcessHandle, PortProbeStatus};
+pub use status::{
+    probe_local_status, LocalFlowState, LocalFlowStatus, OwnedProcessHandle, PortProbeStatus,
+};
 pub use stop::{stop_local_process, stop_process_by_pid, StopOutcome};
 
 pub use server_flavor_core::StartupMode;

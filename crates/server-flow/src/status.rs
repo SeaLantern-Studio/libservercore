@@ -109,7 +109,10 @@ pub(crate) fn tcp_port_listening(port: u16) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::{derive_local_flow_state, probe_local_status, tcp_port_listening, LocalFlowState, PortProbeStatus};
+    use super::{
+        derive_local_flow_state, probe_local_status, tcp_port_listening, LocalFlowState,
+        PortProbeStatus,
+    };
     use crate::spec::{PortProbeKind, PortProbeSpec};
     use std::net::TcpListener;
 
@@ -148,8 +151,8 @@ mod tests {
             kind: PortProbeKind::TcpListening,
         };
 
-        let status = probe_local_status(Some(u32::MAX), Some(&probe))
-            .expect("status probe should succeed");
+        let status =
+            probe_local_status(Some(u32::MAX), Some(&probe)).expect("status probe should succeed");
 
         assert_eq!(status.state, LocalFlowState::Stopped);
         assert!(!status.running);

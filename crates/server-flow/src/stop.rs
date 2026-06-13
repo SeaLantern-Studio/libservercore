@@ -42,12 +42,22 @@ pub fn stop_local_process(
             }
             force_kill_process_tree_by_pid(pid).map_err(StopError::ForceKillFailed)?;
             let _ = child.wait();
-            Ok(StopOutcome { pid, graceful_attempted, forced: true, exit_code: None })
+            Ok(StopOutcome {
+                pid,
+                graceful_attempted,
+                forced: true,
+                exit_code: None,
+            })
         }
         ProcessStopStrategy::ForceOnly => {
             force_kill_process_tree_by_pid(pid).map_err(StopError::ForceKillFailed)?;
             let _ = child.wait();
-            Ok(StopOutcome { pid, graceful_attempted, forced: true, exit_code: None })
+            Ok(StopOutcome {
+                pid,
+                graceful_attempted,
+                forced: true,
+                exit_code: None,
+            })
         }
     }
 }
@@ -57,22 +67,36 @@ pub fn stop_process_by_pid(
     graceful: Option<&GracefulStopSpec>,
     strategy: ProcessStopStrategy,
 ) -> Result<StopOutcome, StopError> {
-    let graceful_attempted = graceful.is_some() && matches!(strategy, ProcessStopStrategy::GracefulThenForce);
+    let graceful_attempted =
+        graceful.is_some() && matches!(strategy, ProcessStopStrategy::GracefulThenForce);
 
     if graceful_attempted {
         return Err(StopError::GracefulStopUnsupported);
     }
 
     if !is_process_alive(pid) {
-        return Ok(StopOutcome { pid, graceful_attempted: false, forced: false, exit_code: None });
+        return Ok(StopOutcome {
+            pid,
+            graceful_attempted: false,
+            forced: false,
+            exit_code: None,
+        });
     }
 
     force_kill_process_tree_by_pid(pid).map_err(StopError::ForceKillFailed)?;
-    Ok(StopOutcome { pid, graceful_attempted: false, forced: true, exit_code: None })
+    Ok(StopOutcome {
+        pid,
+        graceful_attempted: false,
+        forced: true,
+        exit_code: None,
+    })
 }
 
 fn send_stdin_line(child: &mut Child, line: &str) -> Result<(), StopError> {
-    let stdin = child.stdin.as_mut().ok_or(StopError::GracefulStopUnsupported)?;
+    let stdin = child
+        .stdin
+        .as_mut()
+        .ok_or(StopError::GracefulStopUnsupported)?;
     stdin
         .write_all(format!("{}\n", line).as_bytes())
         .map_err(|e| StopError::Io(e.to_string()))?;
@@ -87,7 +111,11 @@ fn wait_for_exit(
     let started = Instant::now();
 
     loop {
-        if child.try_wait().map_err(|e| StopError::Io(e.to_string()))?.is_some() {
+        if child
+            .try_wait()
+            .map_err(|e| StopError::Io(e.to_string()))?
+            .is_some()
+        {
             return Ok(true);
         }
         if started.elapsed() >= timeout {
@@ -119,7 +147,10 @@ mod tests {
         #[cfg(not(windows))]
         {
             let mut command = Command::new("sh");
-            command.args(["-c", "read line; if [ \"$line\" = \"stop\" ]; then exit 0; else exit 7; fi"]);
+            command.args([
+                "-c",
+                "read line; if [ \"$line\" = \"stop\" ]; then exit 0; else exit 7; fi",
+            ]);
             command
         }
     }

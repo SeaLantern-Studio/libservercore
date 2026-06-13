@@ -3,8 +3,8 @@ use std::process::{Child, Command, Stdio};
 
 use crate::error::LaunchError;
 use crate::spec::{
-    ArgsFileSpec, JavaCommandSpec, JavaEnvSpec, LocalLaunchEntry, LocalLaunchSpec,
-    ManagedJavaMode, ScriptLaunchSpec, StarterInstallSpec,
+    ArgsFileSpec, JavaCommandSpec, JavaEnvSpec, LocalLaunchEntry, LocalLaunchSpec, ManagedJavaMode,
+    ScriptLaunchSpec, StarterInstallSpec,
 };
 use server_flavor_core::StartupMode;
 
@@ -15,7 +15,9 @@ pub struct LaunchedLocalProcess {
 
 pub fn build_launch_command(spec: &LocalLaunchSpec) -> Result<Command, LaunchError> {
     if !spec.working_dir.is_dir() {
-        return Err(LaunchError::InvalidWorkingDirectory(spec.working_dir.clone()));
+        return Err(LaunchError::InvalidWorkingDirectory(
+            spec.working_dir.clone(),
+        ));
     }
 
     match &spec.entry {
@@ -26,7 +28,10 @@ pub fn build_launch_command(spec: &LocalLaunchSpec) -> Result<Command, LaunchErr
             build_starter_install_command(&spec.working_dir, starter)
         }
         LocalLaunchEntry::Script(script) => build_script_command(&spec.working_dir, script),
-        LocalLaunchEntry::Executable { executable_path, args } => {
+        LocalLaunchEntry::Executable {
+            executable_path,
+            args,
+        } => {
             let mut command = Command::new(executable_path);
             command.args(args);
             Ok(command)
@@ -101,15 +106,13 @@ fn build_script_command(
     maybe_write_args_file(working_dir, script.args_file.as_ref())?;
 
     match script.startup_mode {
-        StartupMode::Bat => {
-            build_bat_command(
-                working_dir,
-                &script.script_path,
-                script.java_env.as_ref(),
-                script.windows_codepage.as_deref(),
-                &script.trailing_args,
-            )
-        }
+        StartupMode::Bat => build_bat_command(
+            working_dir,
+            &script.script_path,
+            script.java_env.as_ref(),
+            script.windows_codepage.as_deref(),
+            &script.trailing_args,
+        ),
         StartupMode::Sh => {
             let mut command = Command::new("sh");
             command.arg(relative_or_owned(working_dir, &script.script_path));
@@ -131,11 +134,9 @@ fn build_script_command(
             apply_java_process_env(&mut command, script.java_env.as_ref());
             Ok(command)
         }
-        StartupMode::Exe | StartupMode::Jar | StartupMode::Starter | StartupMode::Custom => {
-            Err(LaunchError::UnsupportedStartupMode(Some(
-                script.startup_mode.as_str().to_string(),
-            )))
-        }
+        StartupMode::Exe | StartupMode::Jar | StartupMode::Starter | StartupMode::Custom => Err(
+            LaunchError::UnsupportedStartupMode(Some(script.startup_mode.as_str().to_string())),
+        ),
     }
 }
 
@@ -168,7 +169,8 @@ fn build_bat_command(
             tail
         )
     };
-    let cmd_text = if let Some(codepage) = windows_codepage.filter(|value| !value.trim().is_empty()) {
+    let cmd_text = if let Some(codepage) = windows_codepage.filter(|value| !value.trim().is_empty())
+    {
         format!("chcp {}>nul & {}", codepage.trim(), call_text)
     } else {
         call_text
@@ -409,9 +411,9 @@ mod tests {
             .collect::<Vec<_>>();
 
         assert!(dir.path().join("user_jvm_args.txt").exists());
-        assert!(envs.iter().any(|(key, value)| {
-            key == "JAVA_HOME" && value.as_deref() == Some("/opt/jdk")
-        }));
+        assert!(envs
+            .iter()
+            .any(|(key, value)| { key == "JAVA_HOME" && value.as_deref() == Some("/opt/jdk") }));
         assert!(envs.iter().any(|(key, value)| {
             key == "PATH"
                 && value

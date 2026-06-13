@@ -23,7 +23,10 @@ pub struct JavaEnvSpec {
 
 impl JavaEnvSpec {
     pub fn new(java_home: PathBuf, java_bin_dir: PathBuf) -> Self {
-        Self { java_home, java_bin_dir }
+        Self {
+            java_home,
+            java_bin_dir,
+        }
     }
 }
 
@@ -119,7 +122,11 @@ pub struct LocalLaunchSpec {
 }
 
 impl LocalLaunchSpec {
-    pub fn new(server_id: impl Into<String>, working_dir: PathBuf, entry: LocalLaunchEntry) -> Self {
+    pub fn new(
+        server_id: impl Into<String>,
+        working_dir: PathBuf,
+        entry: LocalLaunchEntry,
+    ) -> Self {
         Self {
             server_id: server_id.into(),
             working_dir,
