@@ -106,6 +106,7 @@ pub fn plan_local_launch(input: LocalLaunchPlanInput) -> Result<LocalLaunchPlan,
                 startup_mode,
                 script_path: PathBuf::from(script_path),
                 java_env,
+                windows_codepage: None,
                 args_file: None,
                 trailing_args: if input.add_nogui {
                     vec!["nogui".to_string()]

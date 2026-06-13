@@ -641,7 +641,7 @@ checksum = "703d5c7ef118737c72f1af64ad2f6f8c5e1921f818cdcb97b8fe6fc69bf66214"
 
 [[package]]
 name = "sl-libscv"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -652,14 +652,14 @@ dependencies = [
 
 [[package]]
 name = "sl-server-core-taxonomy"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "sl-server-flavor-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "serde",
  "sl-server-core-taxonomy",
@@ -667,7 +667,7 @@ dependencies = [
 
 [[package]]
 name = "sl-server-flow"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
  "sl-server-flavor-core",
@@ -675,7 +675,7 @@ dependencies = [
 
 [[package]]
 name = "sl-server-launch-plan-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "serde",
  "sl-server-flow",
@@ -685,7 +685,7 @@ dependencies = [
 
 [[package]]
 name = "sl-server-startup-scan-core"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "flate2",
  "serde",

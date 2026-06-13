@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fix `sponge` and `minestom` to resolve to stable embedded-Java taxonomy and flavor profiles instead of falling back to unknown semantics.
+- Canonicalize startup-scan API output to SeaLantern-style Arclight keys (`arclight-forge`, `arclight-neoforge`) instead of leaking internal underscore keys.
+- Add explicit Windows `.bat` codepage support to `sl-server-flow` script launch specs so host applications can preserve console encoding behavior.
+
 - Bootstrap workspace for publishable Minecraft server modeling crates.
 - Add `sl-server-core-taxonomy` for normalized core keys and coarse family classification.
 - Add `sl-server-flavor-core` for derived flavor capability profiles.

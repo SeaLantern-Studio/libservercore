@@ -50,6 +50,7 @@ pub struct ScriptLaunchSpec {
     pub startup_mode: StartupMode,
     pub script_path: PathBuf,
     pub java_env: Option<JavaEnvSpec>,
+    pub windows_codepage: Option<String>,
     pub args_file: Option<ArgsFileSpec>,
     pub trailing_args: Vec<String>,
 }

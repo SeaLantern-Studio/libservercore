@@ -1,6 +1,6 @@
 [package]
 name = "sl-server-startup-scan-core"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "Apache-2.0"
 description = "Shared startup candidate scanning logic for Minecraft server folders and archives"
@@ -20,7 +20,7 @@ path = "src/lib.rs"
 [dependencies]
 flate2 = "1"
 serde = { version = "1", features = ["derive"], optional = true }
-sl-server-core-taxonomy = { path = "../server-core-taxonomy", version = "0.1.0" }
+sl-server-core-taxonomy = { path = "../server-core-taxonomy", version = "0.1.1" }
 tar = "0.4"
 uuid = { version = "1", features = ["v4"] }
 zip = "2.4"

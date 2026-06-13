@@ -14,6 +14,7 @@ pub enum ServerFlavorKind {
     BukkitLike,
     ForgeLike,
     FabricLike,
+    EmbeddedJavaLike,
     ProxyLike,
     BedrockLike,
     NativeExecutable,
@@ -267,6 +268,7 @@ pub fn resolve_server_flavor_profile(input: &FlavorResolutionInput<'_>) -> Serve
         | Some("bukkit") => bukkit_like_profile(normalized_core),
         Some("forge") | Some("neoforge") => forge_like_profile(normalized_core),
         Some("fabric") | Some("quilt") => fabric_like_profile(normalized_core),
+        Some("sponge") | Some("minestom") => embedded_java_profile(normalized_core),
         Some("velocity") | Some("bungeecord") | Some("waterfall") | Some("lightfall")
         | Some("travertine") | Some("flamecord") => proxy_like_profile(normalized_core),
         Some("bds") => bedrock_dedicated_profile(normalized_core),
@@ -416,6 +418,27 @@ fn fabric_like_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
         supports_custom_wrapper: true,
         extension_kinds: vec![ServerExtensionKind::Mod, ServerExtensionKind::Datapack],
         default_extension_kind: Some(ServerExtensionKind::Mod),
+        allow_manual_extension_switch: false,
+        preferred_control_channel: ControlChannel::Stdin,
+        special_config_kinds: vec![SpecialConfigKind::ServerProperties],
+        config_surfaces: config_surfaces_for_core(core_key),
+    }
+}
+
+fn embedded_java_profile(core_key: Option<&'static str>) -> ServerFlavorProfile {
+    ServerFlavorProfile {
+        flavor_kind: ServerFlavorKind::EmbeddedJavaLike,
+        edition: ServerEdition::Java,
+        server_role: ServerRole::GameServer,
+        display_key: "embedded_java_like",
+        detected_core_key: core_key,
+        default_startup_mode: Some(StartupMode::Jar),
+        preferred_candidate_modes: vec![StartupMode::Jar, StartupMode::Sh, StartupMode::Bat],
+        requires_java: true,
+        supports_starter_install: false,
+        supports_custom_wrapper: true,
+        extension_kinds: vec![ServerExtensionKind::Plugin, ServerExtensionKind::Datapack],
+        default_extension_kind: Some(ServerExtensionKind::Plugin),
         allow_manual_extension_switch: false,
         preferred_control_channel: ControlChannel::Stdin,
         special_config_kinds: vec![SpecialConfigKind::ServerProperties],
@@ -878,6 +901,34 @@ mod tests {
                 "{core_key}"
             );
             assert_eq!(profile.edition, ServerEdition::Java, "{core_key}");
+        }
+    }
+
+    #[test]
+    fn resolves_embedded_java_profiles() {
+        for core_key in ["sponge", "minestom"] {
+            let profile = resolve_server_flavor_profile(&FlavorResolutionInput {
+                core_key: Some(core_key),
+                ..FlavorResolutionInput::default()
+            });
+
+            assert_eq!(
+                profile.flavor_kind,
+                ServerFlavorKind::EmbeddedJavaLike,
+                "{core_key}"
+            );
+            assert_eq!(profile.edition, ServerEdition::Java, "{core_key}");
+            assert_eq!(profile.server_role, ServerRole::GameServer, "{core_key}");
+            assert_eq!(
+                profile.default_extension_kind,
+                Some(ServerExtensionKind::Plugin),
+                "{core_key}"
+            );
+            assert!(
+                profile.supports_extension_kind(ServerExtensionKind::Plugin),
+                "{core_key}"
+            );
+            assert!(!profile.allow_manual_extension_switch, "{core_key}");
         }
     }
 

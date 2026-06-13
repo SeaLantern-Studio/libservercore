@@ -12,6 +12,7 @@ pub enum CoreFamily {
     BukkitLike,
     ForgeLike,
     FabricLike,
+    EmbeddedJavaLike,
     ProxyLike,
     BedrockLike,
     NativeExecutable,
@@ -28,6 +29,7 @@ impl CoreFamily {
             | Some("glowstone") | Some("bukkit") => Self::BukkitLike,
             Some("forge") | Some("neoforge") => Self::ForgeLike,
             Some("fabric") | Some("quilt") => Self::FabricLike,
+            Some("sponge") | Some("minestom") => Self::EmbeddedJavaLike,
             Some("velocity") | Some("bungeecord") | Some("waterfall") | Some("lightfall")
             | Some("travertine") | Some("flamecord") => Self::ProxyLike,
             Some("bds")
@@ -170,8 +172,14 @@ mod tests {
             CoreFamily::from_core_key("arclight"),
             CoreFamily::MixedExtension
         );
-        assert_eq!(CoreFamily::from_core_key("minestom"), CoreFamily::Unknown);
-        assert_eq!(CoreFamily::from_core_key("sponge"), CoreFamily::Unknown);
+        assert_eq!(
+            CoreFamily::from_core_key("minestom"),
+            CoreFamily::EmbeddedJavaLike
+        );
+        assert_eq!(
+            CoreFamily::from_core_key("sponge"),
+            CoreFamily::EmbeddedJavaLike
+        );
         assert_eq!(CoreFamily::from_core_key("mystery"), CoreFamily::Unknown);
     }
 }

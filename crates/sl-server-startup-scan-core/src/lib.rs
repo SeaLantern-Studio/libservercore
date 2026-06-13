@@ -13,7 +13,7 @@ use zip::ZipArchive;
 
 const STARTUP_SCAN_CORE_KEY_OPTIONS: &[&str] = &[
     "pumpkin", "paper", "purpur", "spigot", "bukkit", "folia", "leaves",
-    "pufferfish", "sponge", "arclight_forge", "arclight_neoforge", "mohist",
+    "pufferfish", "sponge", "arclight-forge", "arclight-neoforge", "mohist",
     "catserver", "neoforge", "forge", "fabric", "quilt", "vanilla", "velocity",
     "bungeecord", "waterfall", "lightfall", "travertine", "flamecord", "tuinity",
     "airplane", "glowstone", "cuberite", "minestom", "bds", "liteloaderbds",
@@ -514,7 +514,7 @@ fn build_result(
     mc_version_options: &[&str],
 ) -> StartupScanResult {
     StartupScanResult {
-        parsed_core,
+        parsed_core: canonicalize_parsed_core(parsed_core),
         candidates,
         core_key_options: STARTUP_SCAN_CORE_KEY_OPTIONS
             .iter()
@@ -527,6 +527,23 @@ fn build_result(
         detected_mc_version,
         mc_version_detection_failed,
     }
+}
+
+fn canonicalize_api_core_key(core_key: &str) -> String {
+    match core_key {
+        "arclight_forge" => "arclight-forge".to_string(),
+        "arclight_neoforge" => "arclight-neoforge".to_string(),
+        other => other.to_string(),
+    }
+}
+
+fn canonicalize_parsed_core(mut parsed_core: ParsedStartupCoreInfo) -> ParsedStartupCoreInfo {
+    parsed_core.detected_core_key = parsed_core
+        .detected_core_key
+        .as_deref()
+        .map(canonicalize_api_core_key);
+    parsed_core.display_hint = canonicalize_api_core_key(&parsed_core.display_hint);
+    parsed_core
 }
 
 fn build_parsed_core_from_script_target(
@@ -1438,12 +1455,41 @@ mod tests {
     fn startup_scan_options_expose_canonical_core_keys() {
         assert!(STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"leaves"));
         assert!(STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"pufferfish"));
+        assert!(STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"arclight-forge"));
+        assert!(STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"arclight-neoforge"));
         assert!(STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"forge"));
         assert!(STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"fabric"));
         assert!(STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"vanilla"));
         assert!(STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"nukkit"));
         assert!(!STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"leaf"));
+        assert!(!STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"arclight_forge"));
+        assert!(!STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"arclight_neoforge"));
         assert!(!STARTUP_SCAN_CORE_KEY_OPTIONS.contains(&"arclight-fabric"));
+    }
+
+    #[test]
+    fn scan_result_canonicalizes_arclight_keys_for_api_consumers() {
+        let result = super::build_result(
+            super::ParsedStartupCoreInfo {
+                detected_core_key: Some("arclight_neoforge".to_string()),
+                display_hint: "arclight_forge".to_string(),
+                main_class: None,
+                startup_path: None,
+                confidence: super::StartupScanConfidence::Heuristic,
+            },
+            Vec::new(),
+            None,
+            false,
+            &[],
+        );
+
+        assert_eq!(
+            result.parsed_core.detected_core_key.as_deref(),
+            Some("arclight-neoforge")
+        );
+        assert_eq!(result.parsed_core.display_hint, "arclight-forge");
+        assert!(result.core_key_options.contains(&"arclight-forge".to_string()));
+        assert!(result.core_key_options.contains(&"arclight-neoforge".to_string()));
     }
 
     #[test]

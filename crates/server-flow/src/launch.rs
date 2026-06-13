@@ -102,7 +102,13 @@ fn build_script_command(
 
     match script.startup_mode {
         StartupMode::Bat => {
-            build_bat_command(working_dir, &script.script_path, script.java_env.as_ref(), &script.trailing_args)
+            build_bat_command(
+                working_dir,
+                &script.script_path,
+                script.java_env.as_ref(),
+                script.windows_codepage.as_deref(),
+                &script.trailing_args,
+            )
         }
         StartupMode::Sh => {
             let mut command = Command::new("sh");
@@ -138,6 +144,7 @@ fn build_bat_command(
     working_dir: &Path,
     script_path: &Path,
     java_env: Option<&JavaEnvSpec>,
+    windows_codepage: Option<&str>,
     trailing_args: &[String],
 ) -> Result<Command, LaunchError> {
     let script_text = relative_or_owned(working_dir, script_path)
@@ -151,7 +158,7 @@ fn build_bat_command(
     } else {
         format!(" {}", trailing_args.join(" "))
     };
-    let cmd_text = if prefix.is_empty() {
+    let call_text = if prefix.is_empty() {
         format!("call \"{}\"{}", escape_for_cmd(&script_text), tail)
     } else {
         format!(
@@ -160,6 +167,11 @@ fn build_bat_command(
             escape_for_cmd(&script_text),
             tail
         )
+    };
+    let cmd_text = if let Some(codepage) = windows_codepage.filter(|value| !value.trim().is_empty()) {
+        format!("chcp {}>nul & {}", codepage.trim(), call_text)
+    } else {
+        call_text
     };
 
     let mut command = Command::new("cmd");
@@ -172,6 +184,7 @@ fn build_bat_command(
     _working_dir: &Path,
     _script_path: &Path,
     _java_env: Option<&JavaEnvSpec>,
+    _windows_codepage: Option<&str>,
     _trailing_args: &[String],
 ) -> Result<Command, LaunchError> {
     Err(LaunchError::UnsupportedStartupMode(Some("bat".to_string())))
@@ -374,6 +387,7 @@ mod tests {
                     PathBuf::from("/opt/jdk"),
                     PathBuf::from("/opt/jdk/bin"),
                 )),
+                windows_codepage: None,
                 args_file: Some(ArgsFileSpec {
                     path: PathBuf::from("user_jvm_args.txt"),
                     mode: ManagedJavaMode::ArgsFileOnly,
@@ -423,6 +437,7 @@ mod tests {
                     PathBuf::from("C:/Java/JDK 21"),
                     PathBuf::from("C:/Java/JDK 21/bin"),
                 )),
+                windows_codepage: Some("65001".to_string()),
                 args_file: None,
                 trailing_args: vec!["nogui".to_string()],
             }),
@@ -436,6 +451,7 @@ mod tests {
 
         assert_eq!(args[0], "/d");
         assert_eq!(args[1], "/c");
+        assert!(args[2].contains("chcp 65001>nul"));
         assert!(args[2].contains("JAVA_HOME=C:/Java/JDK 21"));
         assert!(args[2].contains("PATH=C:/Java/JDK 21/bin;%PATH%"));
         assert!(args[2].contains("call \"launch.bat\" nogui"));
