@@ -10,6 +10,7 @@ Current v1 direction:
 - discover generic plugin config files under `plugins/`
 - discover fallback config directories such as `config/` and `defaultconfigs/`
 - discover generic config candidates for non-Bukkit ecosystems under controlled scan roots such as `mods/` and `world/serverconfig/`
+- read file-based player state such as `whitelist.json`, `banned-players.json`, and `ops.json`
 - provide typed file documents for `yaml`, `toml`, `json`, `properties`, and plain text
 - support high-fidelity editing, especially for `properties`
 
@@ -55,4 +56,17 @@ let candidates = discover_config_candidates(&GenericConfigDiscoveryInput::new(
 for entry in candidates.entries {
     println!("{} {:?} {:?}", entry.relative_path, entry.source, entry.reason);
 }
+```
+
+## File-Based Player State
+
+`sl-libscv` also exposes file-based state readers for server-root JSON lists such as `whitelist.json`, `banned-players.json`, and `ops.json`.
+
+```rust
+use sl_libscv::{discover_state_files, read_ops, read_whitelist};
+
+let state_files = discover_state_files("E:/servers/paper");
+
+let _whitelist = read_whitelist(&state_files.whitelist_path).unwrap();
+let _ops = read_ops(&state_files.ops_path).unwrap();
 ```

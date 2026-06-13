@@ -12,3 +12,9 @@ pub enum ConfigIoError {
     WriteFailed(String),
     Io(String),
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StateFileError {
+    Io(String),
+    ParseFailed(String),
+}

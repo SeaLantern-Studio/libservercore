@@ -1,32 +1,32 @@
 [package]
-name = "sl-libscv"
-version = "0.1.1"
+name = "sl-server-info"
+version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-description = "File-centered server configuration discovery and IO support"
+description = "Runtime server information probes, metrics, and log parsing"
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
 rust-version.workspace = true
 readme = "README.md"
-keywords = ["minecraft", "server", "config", "yaml", "properties"]
+keywords = ["minecraft", "server", "rcon", "monitoring", "logs"]
 categories = ["config", "game-development"]
 include = ["src/**/*", "Cargo.toml", "README.md", "../../LICENSE"]
 
 [lib]
-name = "sl_libscv"
+name = "sl_server_info"
 path = "src/lib.rs"
 
 [dependencies]
 sl-server-core-taxonomy = { path = "../server-core-taxonomy", version = "0.1.1" }
-sl-server-flavor-core = { path = "../server-flavor-core", version = "0.2.1" }
-serde = { version = "1", features = ["derive"] }
-toml_edit = "0.22"
-serde_json = "1"
+serde = { version = "1", features = ["derive"], optional = true }
+regex = "1"
+rcon = { version = "0.6", features = ["rt-tokio"] }
+tokio = { version = "1", features = ["rt", "net", "time"] }
 
 [package.metadata.docs.rs]
 all-features = true
 
 [features]
 default = []
-serde = ["sl-server-flavor-core/serde", "sl-server-core-taxonomy/serde"]
+serde = ["dep:serde", "sl-server-core-taxonomy/serde"]
