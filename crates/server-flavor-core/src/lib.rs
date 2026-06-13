@@ -235,7 +235,9 @@ impl ServerFlavorProfile {
     }
 
     pub fn config_surface(&self, key: &str) -> Option<&ConfigSurface> {
-        self.config_surfaces.iter().find(|surface| surface.key == key)
+        self.config_surfaces
+            .iter()
+            .find(|surface| surface.key == key)
     }
 }
 
@@ -715,8 +717,16 @@ fn config_surfaces_for_core(core_key: Option<&'static str>) -> Vec<ConfigSurface
                 canonical_file("spigot_yml", "spigot.yml", ConfigFormat::Yaml),
                 canonical_file("paper_yml", "paper.yml", ConfigFormat::Yaml),
                 canonical_file("paper_yaml", "paper.yaml", ConfigFormat::Yaml),
-                canonical_file("paper_global_yml", "config/paper-global.yml", ConfigFormat::Yaml),
-                canonical_file("paper_global_yaml", "config/paper-global.yaml", ConfigFormat::Yaml),
+                canonical_file(
+                    "paper_global_yml",
+                    "config/paper-global.yml",
+                    ConfigFormat::Yaml,
+                ),
+                canonical_file(
+                    "paper_global_yaml",
+                    "config/paper-global.yaml",
+                    ConfigFormat::Yaml,
+                ),
                 canonical_file(
                     "paper_world_defaults_yml",
                     "config/paper-world-defaults.yml",
@@ -729,7 +739,8 @@ fn config_surfaces_for_core(core_key: Option<&'static str>) -> Vec<ConfigSurface
                 ),
             ]);
         }
-        Some("spigot") | Some("bukkit") | Some("glowstone") | Some("tuinity") | Some("airplane") => {
+        Some("spigot") | Some("bukkit") | Some("glowstone") | Some("tuinity")
+        | Some("airplane") => {
             surfaces.extend([
                 canonical_file("bukkit_yml", "bukkit.yml", ConfigFormat::Yaml),
                 canonical_file("spigot_yml", "spigot.yml", ConfigFormat::Yaml),
@@ -740,7 +751,11 @@ fn config_surfaces_for_core(core_key: Option<&'static str>) -> Vec<ConfigSurface
             }
         }
         Some("pumpkin") => {
-            surfaces.push(canonical_file("pumpkin_toml", "pumpkin.toml", ConfigFormat::Toml));
+            surfaces.push(canonical_file(
+                "pumpkin_toml",
+                "pumpkin.toml",
+                ConfigFormat::Toml,
+            ));
         }
         _ => {}
     }
@@ -750,7 +765,11 @@ fn config_surfaces_for_core(core_key: Option<&'static str>) -> Vec<ConfigSurface
 
 fn base_config_surfaces() -> Vec<ConfigSurface> {
     vec![
-        canonical_file("server_properties", "server.properties", ConfigFormat::Properties),
+        canonical_file(
+            "server_properties",
+            "server.properties",
+            ConfigFormat::Properties,
+        ),
         plugin_directory("plugins_root", "plugins"),
         fallback_directory("defaultconfig", "defaultconfig"),
         fallback_directory("defaultconfigs", "defaultconfigs"),
@@ -800,7 +819,10 @@ fn dedup_config_surfaces(surfaces: Vec<ConfigSurface>) -> Vec<ConfigSurface> {
     let mut deduped = Vec::new();
 
     for surface in surfaces {
-        if !deduped.iter().any(|existing: &ConfigSurface| existing.key == surface.key) {
+        if !deduped
+            .iter()
+            .any(|existing: &ConfigSurface| existing.key == surface.key)
+        {
             deduped.push(surface);
         }
     }
@@ -1252,8 +1274,17 @@ mod tests {
             ..FlavorResolutionInput::default()
         });
 
-        for key in ["plugins_root", "defaultconfig", "defaultconfigs", "config", "configs"] {
-            assert!(profile.config_surface(key).is_some(), "missing surface {key}");
+        for key in [
+            "plugins_root",
+            "defaultconfig",
+            "defaultconfigs",
+            "config",
+            "configs",
+        ] {
+            assert!(
+                profile.config_surface(key).is_some(),
+                "missing surface {key}"
+            );
         }
     }
 }

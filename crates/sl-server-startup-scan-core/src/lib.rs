@@ -12,12 +12,43 @@ use tar::Archive;
 use zip::ZipArchive;
 
 const STARTUP_SCAN_CORE_KEY_OPTIONS: &[&str] = &[
-    "pumpkin", "paper", "purpur", "spigot", "bukkit", "folia", "leaves",
-    "pufferfish", "sponge", "arclight-forge", "arclight-neoforge", "mohist",
-    "catserver", "neoforge", "forge", "fabric", "quilt", "vanilla", "velocity",
-    "bungeecord", "waterfall", "lightfall", "travertine", "flamecord", "tuinity",
-    "airplane", "glowstone", "cuberite", "minestom", "bds", "liteloaderbds",
-    "levilamina", "bdsx", "allay", "nukkit", "powernukkitx", "pocketmine",
+    "pumpkin",
+    "paper",
+    "purpur",
+    "spigot",
+    "bukkit",
+    "folia",
+    "leaves",
+    "pufferfish",
+    "sponge",
+    "arclight-forge",
+    "arclight-neoforge",
+    "mohist",
+    "catserver",
+    "neoforge",
+    "forge",
+    "fabric",
+    "quilt",
+    "vanilla",
+    "velocity",
+    "bungeecord",
+    "waterfall",
+    "lightfall",
+    "travertine",
+    "flamecord",
+    "tuinity",
+    "airplane",
+    "glowstone",
+    "cuberite",
+    "minestom",
+    "bds",
+    "liteloaderbds",
+    "levilamina",
+    "bdsx",
+    "allay",
+    "nukkit",
+    "powernukkitx",
+    "pocketmine",
     "endstone",
 ];
 
@@ -32,9 +63,24 @@ const PREFERRED_SERVER_JAR_PATTERNS: &[&str] = &[
 ];
 
 const INDICATIVE_SERVER_JAR_KEYWORDS: &[&str] = &[
-    "server", "forge", "fabric", "neoforge", "mohist", "paper", "spigot", "purpur",
-    "bukkit", "catserver", "arclight", "velocity", "waterfall", "bungee", "folia",
-    "pufferfish", "leaves", "quilt",
+    "server",
+    "forge",
+    "fabric",
+    "neoforge",
+    "mohist",
+    "paper",
+    "spigot",
+    "purpur",
+    "bukkit",
+    "catserver",
+    "arclight",
+    "velocity",
+    "waterfall",
+    "bungee",
+    "folia",
+    "pufferfish",
+    "leaves",
+    "quilt",
 ];
 
 const STARTER_MAIN_CLASS_PREFIX: &str = "net.neoforged.serverstarterjar";
@@ -213,11 +259,8 @@ pub fn resolve_mode_aware_launch_target(
     server_root: &Path,
 ) -> Result<ResolvedLaunchTarget, String> {
     let normalized_mode = normalize_startup_mode(startup_mode);
-    let preferred_jar_path = resolve_preferred_jar_path(
-        &normalized_mode,
-        configured_startup_path,
-        server_root,
-    )?;
+    let preferred_jar_path =
+        resolve_preferred_jar_path(&normalized_mode, configured_startup_path, server_root)?;
     let startup_filename = configured_startup_path
         .and_then(|value| Path::new(value).file_name())
         .map(|name| name.to_string_lossy().to_string())
@@ -335,7 +378,12 @@ fn scan_folder_source(
 
             candidates.push(StartupCandidateItem {
                 id: format!("{extension}-{filename}"),
-                mode: if extension == "cmd" { "bat" } else { &extension }.to_string(),
+                mode: if extension == "cmd" {
+                    "bat"
+                } else {
+                    &extension
+                }
+                .to_string(),
                 label: filename,
                 detail: script_detail(script_target.as_deref()),
                 path: full_path,
@@ -452,7 +500,9 @@ fn scan_archive_source(
     };
 
     let mut parsed = parse_startup_core_from_directory(&inspect_root)?;
-    if let (Some(temp_dir), Some(startup_path)) = (temp_extract_dir.as_ref(), parsed.startup_path.clone()) {
+    if let (Some(temp_dir), Some(startup_path)) =
+        (temp_extract_dir.as_ref(), parsed.startup_path.clone())
+    {
         parsed.startup_path = Some(to_relative_archive_path(temp_dir.path(), &startup_path)?);
     }
 
@@ -593,7 +643,10 @@ fn build_parsed_core_from_script_target(
 }
 
 fn startup_mode_prefers_direct_jar(startup_mode: &str) -> bool {
-    matches!(normalize_startup_mode(startup_mode).as_str(), "jar" | "starter")
+    matches!(
+        normalize_startup_mode(startup_mode).as_str(),
+        "jar" | "starter"
+    )
 }
 
 fn normalize_startup_mode(startup_mode: &str) -> String {
@@ -674,7 +727,10 @@ fn extract_called_script_target(line: &str) -> Option<String> {
     }
 
     let cleaned = clean_script_token(first);
-    if has_startup_like_extension(&cleaned) || cleaned.ends_with(".jar") || cleaned.contains("pumpkin") {
+    if has_startup_like_extension(&cleaned)
+        || cleaned.ends_with(".jar")
+        || cleaned.contains("pumpkin")
+    {
         return Some(cleaned);
     }
 
@@ -747,7 +803,8 @@ fn resolve_script_target_path(server_root: &Path, target: &str) -> PathBuf {
 fn parse_startup_core_from_jar_path(jar_path: &str) -> Result<ParsedStartupCoreInfo, String> {
     let display_hint = detect_core_display_hint_from_filename(jar_path);
     let main_class = read_jar_main_class_checked(jar_path)?;
-    let detected_core_key = detect_core_key_from_filename_and_main_class(jar_path, main_class.as_deref());
+    let detected_core_key =
+        detect_core_key_from_filename_and_main_class(jar_path, main_class.as_deref());
     let confidence = if detected_core_key.is_some() && main_class.is_some() {
         StartupScanConfidence::Explicit
     } else if detected_core_key.is_some() {
@@ -776,7 +833,8 @@ fn unknown_parsed_core_info() -> ParsedStartupCoreInfo {
 }
 
 fn collect_folder_entries_checked(source: &Path) -> Result<Vec<PathBuf>, String> {
-    let entries = std::fs::read_dir(source).map_err(|e| format!("Failed to read directory: {e}"))?;
+    let entries =
+        std::fs::read_dir(source).map_err(|e| format!("Failed to read directory: {e}"))?;
     let mut paths = Vec::new();
 
     for entry in entries {
@@ -807,7 +865,12 @@ fn update_detected_core(
         .unwrap_or(true);
 
     if should_replace {
-        *detected_core = Some((recommended_rank, is_unknown, normalized_label, parsed.clone()));
+        *detected_core = Some((
+            recommended_rank,
+            is_unknown,
+            normalized_label,
+            parsed.clone(),
+        ));
     }
 }
 
@@ -843,12 +906,15 @@ fn is_forge_like_installer_main_class(parsed: &ParsedStartupCoreInfo) -> bool {
 }
 
 fn startup_detail(parsed: &ParsedStartupCoreInfo) -> String {
-    [Some(format_core_label(
-        parsed
-            .detected_core_key
-            .as_deref()
-            .unwrap_or(parsed.display_hint.as_str()),
-    )), parsed.main_class.clone()]
+    [
+        Some(format_core_label(
+            parsed
+                .detected_core_key
+                .as_deref()
+                .unwrap_or(parsed.display_hint.as_str()),
+        )),
+        parsed.main_class.clone(),
+    ]
     .into_iter()
     .flatten()
     .collect::<Vec<_>>()
@@ -964,9 +1030,7 @@ fn detect_core_key_from_filename_and_main_class(
     let main_class_hint = main_class.and_then(core_key_from_main_class);
 
     match (filename_hint.as_str(), main_class_hint) {
-        ("neoforge", Some("forge")) | ("arclight_neoforge", Some("forge")) => {
-            Some(filename_hint)
-        }
+        ("neoforge", Some("forge")) | ("arclight_neoforge", Some("forge")) => Some(filename_hint),
         (_, Some(main_class_hint)) => Some(main_class_hint.to_string()),
         _ if filename_hint != "unknown" => Some(filename_hint),
         _ => None,
@@ -993,8 +1057,10 @@ fn core_key_from_main_class(main_class: &str) -> Option<&'static str> {
 }
 
 fn read_jar_main_class_checked(jar_path: &str) -> Result<Option<String>, String> {
-    let file = std::fs::File::open(jar_path).map_err(|e| format!("Failed to open JAR file: {e}"))?;
-    let mut archive = ZipArchive::new(file).map_err(|e| format!("Failed to parse JAR archive: {e}"))?;
+    let file =
+        std::fs::File::open(jar_path).map_err(|e| format!("Failed to open JAR file: {e}"))?;
+    let mut archive =
+        ZipArchive::new(file).map_err(|e| format!("Failed to parse JAR archive: {e}"))?;
     let mut manifest = archive
         .by_name("META-INF/MANIFEST.MF")
         .map_err(|e| format!("Failed to read JAR manifest: {e}"))?;
@@ -1068,8 +1134,8 @@ fn extract_modpack_archive(archive_path: &Path, target_dir: &Path) -> Result<(),
     if lower_name.ends_with(".zip") {
         let file = std::fs::File::open(archive_path)
             .map_err(|e| format!("Failed to open archive file: {e}"))?;
-        let mut archive = ZipArchive::new(file)
-            .map_err(|e| format!("Failed to parse ZIP archive: {e}"))?;
+        let mut archive =
+            ZipArchive::new(file).map_err(|e| format!("Failed to parse ZIP archive: {e}"))?;
         return extract_zip_archive(&mut archive, target_dir);
     }
 
@@ -1120,8 +1186,8 @@ fn find_server_jar_checked(server_root: &Path) -> Result<String, String> {
         }
     }
 
-    let entries = std::fs::read_dir(server_root)
-        .map_err(|e| format!("Failed to read server root: {e}"))?;
+    let entries =
+        std::fs::read_dir(server_root).map_err(|e| format!("Failed to read server root: {e}"))?;
     let mut jar_files = Vec::new();
     let mut invalid_jar_dirs = Vec::new();
 
@@ -1144,7 +1210,10 @@ fn find_server_jar_checked(server_root: &Path) -> Result<String, String> {
     let selected = if let Some(path) = select_best_server_jar_path(jar_files) {
         path
     } else if let Some(path) = invalid_jar_dirs.into_iter().next() {
-        return Err(format!("Detected a directory masquerading as a JAR file: {}", path.display()));
+        return Err(format!(
+            "Detected a directory masquerading as a JAR file: {}",
+            path.display()
+        ));
     } else {
         return Err("No JAR file found in server root".to_string());
     };
@@ -1213,8 +1282,8 @@ fn extract_zip_archive(
                 .map_err(|e| format!("Failed to create directory: {e}"))?;
         }
 
-        let mut out_file = std::fs::File::create(&out_path)
-            .map_err(|e| format!("Failed to create file: {e}"))?;
+        let mut out_file =
+            std::fs::File::create(&out_path).map_err(|e| format!("Failed to create file: {e}"))?;
         std::io::copy(&mut file, &mut out_file)
             .map_err(|e| format!("Failed to write file: {e}"))?;
     }
@@ -1240,9 +1309,9 @@ fn extract_tar_archive<R: Read>(reader: R, target_dir: &Path) -> Result<(), Stri
 
 fn to_relative_archive_path(base_dir: &Path, absolute_path: &str) -> Result<String, String> {
     let absolute = Path::new(absolute_path);
-    let relative = absolute
-        .strip_prefix(base_dir)
-        .map_err(|_| format!("Detected startup file is outside the temp extract dir: {absolute_path}"))?;
+    let relative = absolute.strip_prefix(base_dir).map_err(|_| {
+        format!("Detected startup file is outside the temp extract dir: {absolute_path}")
+    })?;
 
     if relative.as_os_str().is_empty() {
         return Err("Detected startup file path is empty".to_string());
@@ -1345,7 +1414,10 @@ mod tests {
         assert_eq!(result.candidates.len(), 1);
         assert_eq!(result.candidates[0].mode, "jar");
         assert_eq!(result.candidates[0].label, "server.jar");
-        assert_eq!(result.parsed_core.detected_core_key.as_deref(), Some("paper"));
+        assert_eq!(
+            result.parsed_core.detected_core_key.as_deref(),
+            Some("paper")
+        );
     }
 
     #[test]
@@ -1361,7 +1433,10 @@ mod tests {
         )
         .expect("pumpkin archive scan should succeed");
 
-        assert_eq!(result.parsed_core.detected_core_key.as_deref(), Some("pumpkin"));
+        assert_eq!(
+            result.parsed_core.detected_core_key.as_deref(),
+            Some("pumpkin")
+        );
         assert_eq!(result.candidates[0].mode, "custom");
         assert_eq!(result.candidates[0].label, "Pumpkin");
     }
@@ -1384,7 +1459,10 @@ mod tests {
         )
         .expect("archive jar scan should succeed");
 
-        assert_eq!(result.parsed_core.detected_core_key.as_deref(), Some("neoforge"));
+        assert_eq!(
+            result.parsed_core.detected_core_key.as_deref(),
+            Some("neoforge")
+        );
         assert_eq!(result.candidates[0].mode, "starter");
         assert_eq!(result.candidates[0].label, "Installer");
     }
@@ -1408,7 +1486,10 @@ mod tests {
         )
         .expect("folder scan should succeed");
 
-        assert_eq!(result.parsed_core.detected_core_key.as_deref(), Some("paper"));
+        assert_eq!(
+            result.parsed_core.detected_core_key.as_deref(),
+            Some("paper")
+        );
         assert!(result
             .parsed_core
             .startup_path
@@ -1431,7 +1512,10 @@ mod tests {
         .expect_err("invalid archive should fail");
         let after = startup_scan_temp_dirs();
 
-        assert!(error.contains("Failed to parse ZIP archive"), "unexpected error: {error}");
+        assert!(
+            error.contains("Failed to parse ZIP archive"),
+            "unexpected error: {error}"
+        );
         assert_eq!(after, before);
     }
 
@@ -1488,8 +1572,12 @@ mod tests {
             Some("arclight-neoforge")
         );
         assert_eq!(result.parsed_core.display_hint, "arclight-forge");
-        assert!(result.core_key_options.contains(&"arclight-forge".to_string()));
-        assert!(result.core_key_options.contains(&"arclight-neoforge".to_string()));
+        assert!(result
+            .core_key_options
+            .contains(&"arclight-forge".to_string()));
+        assert!(result
+            .core_key_options
+            .contains(&"arclight-neoforge".to_string()));
     }
 
     #[test]
@@ -1515,9 +1603,15 @@ mod tests {
             .iter()
             .find(|candidate| candidate.mode == "bat")
             .expect("bat candidate should exist");
-        assert_eq!(script.resolved_target_path.as_deref(), Some("paperclip.jar"));
+        assert_eq!(
+            script.resolved_target_path.as_deref(),
+            Some("paperclip.jar")
+        );
         assert!(script.detail.contains("paperclip.jar"));
-        assert_eq!(result.parsed_core.detected_core_key.as_deref(), Some("paper"));
+        assert_eq!(
+            result.parsed_core.detected_core_key.as_deref(),
+            Some("paper")
+        );
     }
 
     #[test]
@@ -1549,8 +1643,7 @@ mod tests {
         let script_path = dir.path().join("start.ps1");
         fs::write(&script_path, "& './pumpkin.exe' nogui\n")
             .expect("powershell script should write");
-        fs::write(dir.path().join("pumpkin.exe"), b"pumpkin")
-            .expect("pumpkin exe should write");
+        fs::write(dir.path().join("pumpkin.exe"), b"pumpkin").expect("pumpkin exe should write");
 
         let result = scan_startup_candidates(
             dir.path().to_string_lossy().as_ref(),
@@ -1564,7 +1657,10 @@ mod tests {
             .iter()
             .find(|candidate| candidate.mode == "ps1")
             .expect("ps1 candidate should exist");
-        assert_eq!(script.resolved_target_path.as_deref(), Some("./pumpkin.exe"));
+        assert_eq!(
+            script.resolved_target_path.as_deref(),
+            Some("./pumpkin.exe")
+        );
     }
 
     #[test]
@@ -1612,7 +1708,10 @@ mod tests {
             "E:/srv/shared/server.jar",
         );
 
-        assert_eq!(nested.replace('\\', "/"), "E:/servers/fabric-1.20.1/libraries/server.jar");
+        assert_eq!(
+            nested.replace('\\', "/"),
+            "E:/servers/fabric-1.20.1/libraries/server.jar"
+        );
         assert_eq!(external.replace('\\', "/"), "E:/srv/shared/server.jar");
     }
 

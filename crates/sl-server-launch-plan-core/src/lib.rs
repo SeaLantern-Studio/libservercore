@@ -5,8 +5,8 @@
 use std::path::PathBuf;
 
 use server_flow::{
-    JavaCommandSpec, JavaEnvSpec, LocalLaunchEntry, LocalLaunchSpec, PortProbeKind,
-    PortProbeSpec, ScriptLaunchSpec, StarterInstallSpec, StartupMode,
+    JavaCommandSpec, JavaEnvSpec, LocalLaunchEntry, LocalLaunchSpec, PortProbeKind, PortProbeSpec,
+    ScriptLaunchSpec, StarterInstallSpec, StartupMode,
 };
 use server_startup_scan_core::{resolve_mode_aware_launch_target, ResolvedLaunchTarget};
 
@@ -70,7 +70,8 @@ pub fn plan_local_launch(input: LocalLaunchPlanInput) -> Result<LocalLaunchPlan,
                 .clone()
                 .or_else(|| input.configured_startup_path.clone())
                 .ok_or_else(|| "Missing jar path for jar startup mode".to_string())?;
-            let java = java_spec.ok_or_else(|| "Java path is required for jar startup mode".to_string())?;
+            let java = java_spec
+                .ok_or_else(|| "Java path is required for jar startup mode".to_string())?;
             LocalLaunchEntry::DirectJar {
                 jar_path: PathBuf::from(jar_path),
                 java,
@@ -86,7 +87,8 @@ pub fn plan_local_launch(input: LocalLaunchPlanInput) -> Result<LocalLaunchPlan,
                 .clone()
                 .ok_or_else(|| "Java path is required for starter startup mode".to_string())?;
             let installer_path = PathBuf::from(installer_jar);
-            let starter_core_key = infer_starter_core_key(&resolution, input.configured_startup_path.as_deref());
+            let starter_core_key =
+                infer_starter_core_key(&resolution, input.configured_startup_path.as_deref());
             LocalLaunchEntry::StarterInstall(StarterInstallSpec {
                 installer_jar: installer_path.clone(),
                 java: java.clone(),

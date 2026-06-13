@@ -429,7 +429,11 @@ fn normalize_relative(root: &Path, path: &Path) -> String {
         .replace('\\', "/")
 }
 
-fn push_entry(entries: &mut Vec<ConfigEntry>, seen_paths: &mut BTreeSet<String>, entry: ConfigEntry) {
+fn push_entry(
+    entries: &mut Vec<ConfigEntry>,
+    seen_paths: &mut BTreeSet<String>,
+    entry: ConfigEntry,
+) {
     if seen_paths.insert(entry.relative_path.clone()) {
         entries.push(entry);
     }
@@ -606,7 +610,10 @@ mod tests {
         .unwrap();
         std::fs::create_dir_all(dir.path().join("plugins").join("Essentials")).unwrap();
         std::fs::write(
-            dir.path().join("plugins").join("Essentials").join("config.yml"),
+            dir.path()
+                .join("plugins")
+                .join("Essentials")
+                .join("config.yml"),
             "spawn: world\n",
         )
         .unwrap();
@@ -646,10 +653,16 @@ mod tests {
     fn excludes_readme_like_files_from_recursive_discovery() {
         let dir = TestDir::new("readme-skip");
         std::fs::create_dir_all(dir.path().join("plugins").join("Demo")).unwrap();
-        std::fs::write(dir.path().join("plugins").join("Demo").join("README.txt"), "docs")
-            .unwrap();
-        std::fs::write(dir.path().join("plugins").join("Demo").join("notes.txt"), "keep")
-            .unwrap();
+        std::fs::write(
+            dir.path().join("plugins").join("Demo").join("README.txt"),
+            "docs",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path().join("plugins").join("Demo").join("notes.txt"),
+            "keep",
+        )
+        .unwrap();
 
         let catalog = discover_config_entries(&ConfigDiscoveryInput::new(
             "paper",
@@ -674,20 +687,27 @@ mod tests {
         std::fs::create_dir_all(dir.path().join("world").join("serverconfig")).unwrap();
         std::fs::create_dir_all(dir.path().join("logs")).unwrap();
         std::fs::write(dir.path().join("eula.txt"), "eula=true\n").unwrap();
-        std::fs::write(dir.path().join("mods").join("demo").join("demo-server.toml"), "a=1\n")
-            .unwrap();
         std::fs::write(
-            dir.path().join("world").join("serverconfig").join("forge-server.toml"),
+            dir.path()
+                .join("mods")
+                .join("demo")
+                .join("demo-server.toml"),
+            "a=1\n",
+        )
+        .unwrap();
+        std::fs::write(
+            dir.path()
+                .join("world")
+                .join("serverconfig")
+                .join("forge-server.toml"),
             "b=2\n",
         )
         .unwrap();
-        std::fs::write(dir.path().join("logs").join("latest.json"), "{}")
-            .unwrap();
+        std::fs::write(dir.path().join("logs").join("latest.json"), "{}").unwrap();
 
-        let catalog = discover_config_candidates(&GenericConfigDiscoveryInput::new(
-            dir.path().to_path_buf(),
-        ))
-        .expect("generic candidates should discover");
+        let catalog =
+            discover_config_candidates(&GenericConfigDiscoveryInput::new(dir.path().to_path_buf()))
+                .expect("generic candidates should discover");
 
         assert!(catalog.entries.iter().any(|entry| {
             entry.relative_path == "eula.txt"
@@ -731,7 +751,8 @@ mod tests {
         input.scan_roots = vec!["config".to_string()];
         input.max_depth = Some(1);
 
-        let catalog = discover_config_candidates(&input).expect("generic candidates should discover");
+        let catalog =
+            discover_config_candidates(&input).expect("generic candidates should discover");
 
         assert!(catalog
             .entries

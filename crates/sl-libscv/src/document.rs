@@ -32,7 +32,11 @@ pub struct PropertiesDocument {
 enum PropertiesLine {
     Blank,
     Comment(String),
-    Entry { key: String, separator: char, value: String },
+    Entry {
+        key: String,
+        separator: char,
+        value: String,
+    },
     Raw(String),
 }
 
@@ -64,7 +68,9 @@ pub fn read_config_document(
                 .map_err(|e| ConfigIoError::ParseFailed(e.to_string()))?;
             Ok(ConfigDocument::Json(JsonDocument { value }))
         }
-        ConfigFormat::Properties => Ok(ConfigDocument::Properties(PropertiesDocument::parse(content))),
+        ConfigFormat::Properties => Ok(ConfigDocument::Properties(PropertiesDocument::parse(
+            content,
+        ))),
         ConfigFormat::Text => Ok(ConfigDocument::Text(TextDocument {
             raw: content.to_string(),
         })),
@@ -160,9 +166,8 @@ impl PropertiesDocument {
                 continue;
             }
 
-            if let Some((index, separator)) = line
-                .char_indices()
-                .find(|(_, ch)| *ch == '=' || *ch == ':')
+            if let Some((index, separator)) =
+                line.char_indices().find(|(_, ch)| *ch == '=' || *ch == ':')
             {
                 let key = line[..index].trim().to_string();
                 let value = line[index + separator.len_utf8()..].to_string();
@@ -320,7 +325,11 @@ mod tests {
     #[test]
     fn properties_file_round_trip_updates_real_file_contents() {
         let dir = TestDir::new("properties-file");
-        let path = dir.path().join("plugins").join("Demo").join("config.properties");
+        let path = dir
+            .path()
+            .join("plugins")
+            .join("Demo")
+            .join("config.properties");
         std::fs::create_dir_all(path.parent().expect("parent should exist")).unwrap();
         std::fs::write(&path, "# note\nname=before\n").unwrap();
 
